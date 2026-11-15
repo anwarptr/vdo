@@ -3,7 +3,10 @@ set -e
 
 mkdir -p app/src/main/java/com/example/lancast
 mkdir -p gradle/wrapper
-
+cat << 'EOF' > gradle.properties
+android.useAndroidX=true
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+EOF
 cat << 'EOF' > settings.gradle.kts
 pluginManagement {
     repositories { google(); mavenCentral(); gradlePluginPortal() }
