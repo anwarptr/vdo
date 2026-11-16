@@ -466,7 +466,22 @@ class CastServerService : Service() {
 
         private fun streamCurrentVideo(session: IHTTPSession): Response {
             val uri = currentVideoUri ?: return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "No video")
-            val mime = contentResolver.getType(uri) ?: "video/mp4"
+            
+            // Normalize MIME type so audio stream is always correctly recognized
+            var mime = contentResolver.getType(uri)
+            if (mime.isNullOrBlank() || mime == "video/*" || mime == "application/octet-stream") {
+                val ext = uri.path?.substringAfterLast('.', "")?.lowercase()
+                mime = when (ext) {
+                    "mp4", "m4v" -> "video/mp4"
+                    "mkv" -> "video/x-matroska"
+                    "webm" -> "video/webm"
+                    "mov" -> "video/quicktime"
+                    "avi" -> "video/x-msvideo"
+                    "ts" -> "video/mp2t"
+                    else -> "video/mp4"
+                }
+            }
+
             val pfd = contentResolver.openFileDescriptor(uri, "r")
                 ?: return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Cannot open")
 
@@ -638,6 +653,22 @@ class CastServerService : Service() {
           let lastSeq = 0;
           let osdTimer = null;
           let hudTimer = null;
+          let isMutedByCommand = false;
+
+          // Explicitly ensure audio is unmuted and enabled
+          v.muted = false;
+          v.volume = 1.0;
+
+          function ensureAudioEnabled() {
+            if (v.muted && !isMutedByCommand) {
+              v.muted = false;
+            }
+            if (v.volume === 0 && !isMutedByCommand) {
+              v.volume = 1.0;
+            }
+          }
+          window.addEventListener('click', ensureAudioEnabled);
+          window.addEventListener('keydown', ensureAudioEnabled);
 
           function updateClock() {
             const now = new Date();
@@ -703,7 +734,17 @@ class CastServerService : Service() {
             }
           });
 
-          v.addEventListener('play', () => { reportStatus(); });
+          v.addEventListener('volumechange', () => {
+            if (v.muted && !isMutedByCommand) {
+              v.muted = false;
+            }
+            reportStatus();
+          });
+
+          v.addEventListener('play', () => {
+            ensureAudioEnabled();
+            reportStatus();
+          });
           v.addEventListener('pause', () => { reportStatus(); });
           v.addEventListener('ended', () => {
             reportStatus();
@@ -723,30 +764,52 @@ class CastServerService : Service() {
                 ambient.style.display = 'none';
                 v.style.display = 'block';
                 v.src = '/stream?t=' + s.seq;
-                v.play().catch(()=>{});
+                
+                // Force unmuted audio on new playback
+                isMutedByCommand = false;
+                v.muted = false;
+                v.volume = 1.0;
+                
+                const playPromise = v.play();
+                if (playPromise !== undefined) {
+                  playPromise.then(() => {
+                    v.muted = false;
+                  }).catch(() => {
+                    v.muted = false;
+                    v.play().catch(()=>{});
+                  });
+                }
                 showHud('▶', 'Playing');
               } else if (s.cmd === 'play') {
+                ensureAudioEnabled();
                 v.play().catch(()=>{});
                 showHud('▶', 'Play');
               } else if (s.cmd === 'pause') {
                 v.pause();
                 showHud('⏸', 'Paused');
               } else if (s.cmd === 'toggle') {
+                ensureAudioEnabled();
                 if (v.paused) { v.play().catch(()=>{}); showHud('▶', 'Play'); }
                 else { v.pause(); showHud('⏸', 'Paused'); }
               } else if (s.cmd === 'seekRelative') {
+                ensureAudioEnabled();
                 v.currentTime = Math.max(0, Math.min(v.duration || 999999, v.currentTime + (s.val || 0)));
                 const sign = s.val >= 0 ? '+' : '';
                 showHud(s.val >= 0 ? '⏩' : '⏪', sign + s.val + 's (' + formatTime(v.currentTime) + ')');
               } else if (s.cmd === 'seekAbsolute') {
+                ensureAudioEnabled();
                 v.currentTime = Math.max(0, Math.min(v.duration || 999999, s.val || 0));
                 showHud('⏩', formatTime(v.currentTime));
               } else if (s.cmd === 'setVolume') {
                 v.volume = Math.max(0, Math.min(1, s.val));
-                v.muted = false;
+                if (v.volume > 0) {
+                  isMutedByCommand = false;
+                  v.muted = false;
+                }
                 showHud('🔊', Math.round(v.volume * 100) + '%');
               } else if (s.cmd === 'mute') {
-                v.muted = !v.muted;
+                isMutedByCommand = !isMutedByCommand;
+                v.muted = isMutedByCommand;
                 showHud(v.muted ? '🔇' : '🔊', v.muted ? 'Muted' : Math.round(v.volume * 100) + '%');
               } else if (s.cmd === 'setSpeed') {
                 v.playbackRate = s.val || 1.0;
@@ -772,6 +835,7 @@ class CastServerService : Service() {
           setInterval(reportStatus, 500);
 
           window.handleTvKey = function(action, val) {
+            ensureAudioEnabled();
             if (action === 'toggle') {
               if (v.paused) { v.play().catch(()=>{}); showHud('▶', 'Play'); }
               else { v.pause(); showHud('⏸', 'Paused'); }
@@ -784,6 +848,10 @@ class CastServerService : Service() {
               showHud(val >= 0 ? '⏩' : '⏪', (val >= 0 ? '+' : '') + val + 's');
             } else if (action === 'volume') {
               v.volume = Math.max(0, Math.min(1, v.volume + (val || 0)));
+              if (v.volume > 0) {
+                isMutedByCommand = false;
+                v.muted = false;
+              }
               showHud('🔊', Math.round(v.volume * 100) + '%');
             } else if (action === 'back') {
               if (v.style.display !== 'none' && !v.paused) {
@@ -1645,6 +1713,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
+import android.media.AudioManager
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.os.Bundle
@@ -1671,6 +1740,12 @@ class TvReceiverActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Ensure volume keys control media playback audio stream (fixes no sound / wrong audio stream on TV)
+        volumeControlStream = AudioManager.STREAM_MUSIC
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        @Suppress("DEPRECATION")
+        audioManager?.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
 
         // Keep TV screen awake during casting
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -1729,6 +1804,14 @@ class TvReceiverActivity : Activity() {
 
         nsdManager = getSystemService(Context.NSD_SERVICE) as NsdManager
         startDiscovery()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-gain media audio focus when activity resumes
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        @Suppress("DEPRECATION")
+        audioManager?.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
     }
 
     private fun startDiscovery() {
