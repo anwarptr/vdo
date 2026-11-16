@@ -8,5 +8,7 @@ build.gradle.kts
 gradle.properties
 settings.gradle.kts
 local.properties
+release.keystore
+*.keystore
 *.apk
 *.log

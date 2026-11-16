@@ -55,6 +55,20 @@ android {
         versionCode = 2
         versionName = "2.0"
     }
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("release.keystore")
+            storePassword = "vdocast"
+            keyAlias = "vdocast"
+            keyPassword = "vdocast"
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
     buildFeatures { compose = true }
     composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
     compileOptions {
@@ -1420,6 +1434,20 @@ android {
         versionCode = 2
         versionName = "2.0"
     }
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("release.keystore")
+            storePassword = "vdocast"
+            keyAlias = "vdocast"
+            keyPassword = "vdocast"
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -1804,5 +1832,13 @@ class TvReceiverActivity : Activity() {
 }
 EOF
 
+# Generate release keystore if not exists
+if [ ! -f release.keystore ]; then
+    keytool -genkeypair -v -keystore release.keystore -alias vdocast -keyalg RSA -keysize 2048 -validity 10000 -storepass vdocast -keypass vdocast -dname "CN=VDOCast, O=VDOCast, C=US"
+fi
+
 gradle wrapper --gradle-version 8.7
-./gradlew :app:assembleDebug :tv:assembleDebug
+./gradlew :app:assembleRelease :tv:assembleRelease
+
+cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/vdo-remote-release.apk 2>/dev/null || true
+cp tv/build/outputs/apk/release/tv-release.apk tv/build/outputs/apk/release/vdo-tv-release.apk 2>/dev/null || true

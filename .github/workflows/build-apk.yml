@@ -13,12 +13,12 @@ jobs:
       - uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools'
-      - name: Generate Gradle Project & Build APK
+      - name: Generate Gradle Project & Build Release APK
         run: bash build.sh
-      - name: Upload APKs
+      - name: Upload Release APKs
         uses: actions/upload-artifact@v5
         with:
-          name: VDOCast-Phone-and-TV-APKs
+          name: VDOCast-Release-APKs
           path: |
-            app/build/outputs/apk/debug/app-debug.apk
-            tv/build/outputs/apk/debug/tv-debug.apk
+            app/build/outputs/apk/release/*.apk
+            tv/build/outputs/apk/release/*.apk

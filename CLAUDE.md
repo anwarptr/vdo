@@ -4,7 +4,7 @@ This file provides guidance when working with code in this repository.
 
 ## Repository shape: everything lives in `build.sh`
 
-This repo has no checked-in Android source. `build.sh` is the single source of truth: it uses `cat << 'EOF'` heredocs to **generate** the entire Gradle project (settings, root/module `build.gradle.kts`, manifests, XML drawables/resources, Kotlin sources), then creates a Gradle wrapper and builds both APKs.
+This repo has no checked-in Android source. `build.sh` is the single source of truth: it uses `cat << 'EOF'` heredocs to **generate** the entire Gradle project (settings, root/module `build.gradle.kts`, manifests, XML drawables/resources, Kotlin sources), then creates a Gradle wrapper and builds both Release APKs.
 
 - To change any code, config, or dependency, edit the corresponding heredoc inside `build.sh`. Files under `app/`, `tv/`, `gradle/`, `settings.gradle.kts`, etc. are build outputs and get overwritten on every run.
 - Heredocs are quoted (`'EOF'`), so `$` in Kotlin string templates (e.g. `"http://$host:$port/tv"`) is literal and must stay that way; don't switch to unquoted `EOF`.
@@ -13,14 +13,16 @@ This repo has no checked-in Android source. `build.sh` is the single source of t
 ## Build
 
 ```bash
-bash build.sh          # generates the project, then runs: ./gradlew :app:assembleDebug :tv:assembleDebug
+bash build.sh          # generates project, signs, and runs: ./gradlew :app:assembleRelease :tv:assembleRelease
 ```
 
-Requirements: JDK 17, Android SDK, and a system `gradle` on PATH (the script runs `gradle wrapper --gradle-version 8.7` to bootstrap the wrapper). After a first run you can iterate with `./gradlew :app:assembleDebug` or `./gradlew :tv:assembleDebug`, but remember that edits to generated files are lost on the next `build.sh`.
+Requirements: JDK 17, Android SDK, and a system `gradle` on PATH (the script generates a release keystore and runs `gradle wrapper --gradle-version 8.7` to bootstrap the wrapper). After a first run you can iterate with `./gradlew :app:assembleRelease` or `./gradlew :tv:assembleRelease`, but remember that edits to generated files are lost on the next `build.sh`.
 
-Outputs: `app/build/outputs/apk/debug/app-debug.apk` and `tv/build/outputs/apk/debug/tv-debug.apk`.
+Outputs:
+- `app/build/outputs/apk/release/vdo-remote-release.apk` (and `app-release.apk`)
+- `tv/build/outputs/apk/release/vdo-tv-release.apk` (and `tv-release.apk`)
 
-CI (`.github/workflows/build-apk.yml`) runs `bash build.sh` on every push and uploads both APKs as the `VDOCast-Phone-and-TV-APKs` artifact. There are no tests or lint configured.
+CI (`.github/workflows/build-apk.yml`) runs `bash build.sh` on every push and uploads both Release APKs as the `VDOCast-Release-APKs` artifact. There are no tests or lint configured.
 
 Toolchain pins (in the root `build.gradle.kts` heredoc): AGP 8.5.2, Kotlin 1.9.24, Compose compiler extension 1.5.14 (must stay compatible with the Kotlin version), Compose BOM 2024.09.00, compileSdk/targetSdk 34.
 
