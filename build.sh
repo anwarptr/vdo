@@ -1141,10 +1141,10 @@ fun VdoMainScreen(initialUri: Uri?) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Phone Wi-Fi IP: ${getLocalWifiIp(context)}:5050", fontWeight = FontWeight.SemiBold)
-                    Text("Receiver: VDO TV (TX3 Mini)")
+                    Text("Receiver: VDO TV")
                     Text("Connection: ${if (isConnected) "Live Synced with TV" else "Standby (Waiting for TV)"}")
                     Divider(color = Color(0xFF1E293B))
-                    Text("Ensure your TX3 Mini box is open on VDO TV and connected to the same Wi-Fi network.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
+                    Text("Ensure your TV or Android TV box is open on VDO TV and connected to the same Wi-Fi network.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
                 }
             },
             confirmButton = {
@@ -1659,7 +1659,7 @@ fun RemoteScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Text(
-                        "Type movie title, search query, or paste link to send to your TX3 Mini TV box:",
+                        "Type movie title, search query, or paste link to send to your TV:",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF94A3B8)
                     )
@@ -3152,7 +3152,7 @@ class VdoRemoteImeService : InputMethodService() {
         }
 
         infoView = TextView(this).apply {
-            text = "⌨️ VDO Remote Keyboard • Type on phone or use TX3 remote"
+            text = "⌨️ VDO Remote Keyboard • Type on phone or use TV remote"
             setTextColor(android.graphics.Color.parseColor("#00E5FF"))
             textSize = 16f
             gravity = Gravity.CENTER

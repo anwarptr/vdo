@@ -52,12 +52,12 @@ Two Android apps in one Gradle project (`rootProject.name = "VDOCastSuite"`):
     - `/stream` → Android ContentResolver streaming with HTTP Range support for seeking
 
 ### 2. `:tv` — VDO TV (`com.example.lancasttv`, minSdk 21, plain Views + WebView, Leanback)
-- **Role**: Big-screen cinema receiver targeting Android TV & TX3 Mini box.
+- **Role**: Big-screen cinema receiver targeting Android TV & TV boxes.
 - **Branding & Assets**: Custom cinema TV vector icon and Leanback launcher banner (`tv_banner.xml`, 320x180 dp with bold VDO TV cinema graphics), labeled `VDO TV`.
 - **Activity (`TvReceiverActivity.kt`)**:
   - Automatic NSD discovery of `_vdocast._tcp.` (and fallback `_lancast._tcp.`).
   - Fullscreen sticky immersive mode, `FLAG_KEEP_SCREEN_ON` to prevent TV sleep.
-  - Hardware Remote Key Listener: Intercepts physical D-pad remotes (IR/Bluetooth) on the TX3 Mini (DPAD_CENTER, MEDIA_PLAY_PAUSE, DPAD_LEFT/RIGHT for seeking, UP/DOWN for volume, BACK to standby).
+  - Hardware Remote Key Listener: Intercepts physical D-pad remotes (IR/Bluetooth) on Android TV boxes (DPAD_CENTER, MEDIA_PLAY_PAUSE, DPAD_LEFT/RIGHT for seeking, UP/DOWN for volume, BACK to standby).
 - **Embedded Web Player (`TV_HTML`)**:
   - **Ambient Standby Screen**: Smooth dark glowing backdrop, live digital clock and date, Wi-Fi status pill and connection instructions.
   - **Cinema OSD (On-Screen Display)**: Top title bar, resolution/speed badges, bottom progress bar with buffered range visualization, and timecodes (auto-hides after 3 seconds).
