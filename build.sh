@@ -980,10 +980,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -999,6 +1001,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -1053,6 +1056,8 @@ class MainActivity : ComponentActivity() {
             CastServerService.currentVideoTitle = getVideoName(this, sharedUri)
             CastServerService.pushCommand("load", 0.0, CastServerService.currentVideoTitle)
         }
+
+        DeviceRemote.init(this)
 
         setContent {
             val luxuryDarkScheme = darkColorScheme(
@@ -1126,6 +1131,14 @@ fun VdoMainScreen(initialUri: Uri?) {
 
     val tvStatus = CastServerService.tvStatus
     val isConnected = tvStatus.status != "idle"
+    val deviceMode = DeviceRemote.isDeviceMode
+    val pillConnected = if (deviceMode) DeviceRemote.isConnected else isConnected
+    val pillLabel = when {
+        deviceMode && DeviceRemote.isConnected -> "TX3 Linked"
+        deviceMode -> "TX3 Offline"
+        isConnected -> "VDO TV"
+        else -> "Wi-Fi Ready"
+    }
 
     val picker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -1180,11 +1193,12 @@ fun VdoMainScreen(initialUri: Uri?) {
         topBar = {
             ModernTopAppBar(
                 selectedTab = selectedTab,
-                isConnected = isConnected,
-                onInfoClick = { showInfoDialog = true },
+                isConnected = pillConnected,
+                statusLabel = pillLabel,
+                onInfoClick = { if (deviceMode) selectedTab = 1 else showInfoDialog = true },
                 onStandbyClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("stop")
+                    if (deviceMode) DeviceRemote.key(DeviceRemote.KEY_POWER) else CastServerService.pushCommand("stop")
                 }
             )
         },
@@ -1251,6 +1265,7 @@ fun VdoMainScreen(initialUri: Uri?) {
 fun ModernTopAppBar(
     selectedTab: Int,
     isConnected: Boolean,
+    statusLabel: String,
     onInfoClick: () -> Unit,
     onStandbyClick: () -> Unit
 ) {
@@ -1309,7 +1324,7 @@ fun ModernTopAppBar(
                             .background(if (isConnected) GtvSuccess else GtvPrimary)
                     )
                     Text(
-                        if (isConnected) "VDO TV" else "Wi-Fi Ready",
+                        statusLabel,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isConnected) GtvSuccess else GtvPrimary
@@ -1669,6 +1684,7 @@ fun RemoteScreen(
     val scrollState = rememberScrollState()
     var showKeyboardDialog by remember { mutableStateOf(false) }
     var controlMode by remember { mutableStateOf("dpad") } // "dpad" or "trackpad"
+    val deviceMode = DeviceRemote.isDeviceMode
 
     // Speech-to-Text Recognition Launcher (Feature 4: Voice Search)
     val speechLauncher = rememberLauncherForActivityResult(
@@ -1678,7 +1694,8 @@ fun RemoteScreen(
             val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             val spokenText = matches?.firstOrNull()
             if (!spokenText.isNullOrBlank()) {
-                CastServerService.pushCommand("typeAndEnter", 0.0, spokenText)
+                if (DeviceRemote.isDeviceMode) DeviceRemote.text(spokenText, pressEnter = true)
+                else CastServerService.pushCommand("typeAndEnter", 0.0, spokenText)
                 Toast.makeText(context, "Voice Search sent: \"$spokenText\"", Toast.LENGTH_SHORT).show()
             }
         }
@@ -1709,7 +1726,7 @@ fun RemoteScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Text(
-                        "Type movie title, search query, or paste link to send to your TV:",
+                        if (deviceMode) "Focus a search box on the TX3 first, then type here (English letters/numbers):" else "Type movie title, search query, or paste link to send to your TV:",
                         style = MaterialTheme.typography.bodySmall,
                         color = GtvTextSecondary
                     )
@@ -1743,7 +1760,7 @@ fun RemoteScreen(
                         OutlinedButton(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                CastServerService.pushCommand("key", 0.0, "backspace")
+                                if (deviceMode) DeviceRemote.key(DeviceRemote.KEY_DEL) else CastServerService.pushCommand("key", 0.0, "backspace")
                                 if (textInput.isNotEmpty()) textInput = textInput.dropLast(1)
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -1757,7 +1774,7 @@ fun RemoteScreen(
                         OutlinedButton(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                CastServerService.pushCommand("key", 0.0, "space")
+                                if (deviceMode) DeviceRemote.key(DeviceRemote.KEY_SPACE) else CastServerService.pushCommand("key", 0.0, "space")
                                 textInput += " "
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -1769,7 +1786,7 @@ fun RemoteScreen(
                         OutlinedButton(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                CastServerService.pushCommand("key", 0.0, "clear")
+                                if (deviceMode) DeviceRemote.clearText() else CastServerService.pushCommand("key", 0.0, "clear")
                                 textInput = ""
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -1785,7 +1802,8 @@ fun RemoteScreen(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         if (textInput.isNotBlank()) {
-                            CastServerService.pushCommand("typeAndEnter", 0.0, textInput)
+                            if (deviceMode) DeviceRemote.text(textInput, pressEnter = true)
+                            else CastServerService.pushCommand("typeAndEnter", 0.0, textInput)
                             showKeyboardDialog = false
                         }
                     },
@@ -1802,7 +1820,8 @@ fun RemoteScreen(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         if (textInput.isNotBlank()) {
-                            CastServerService.pushCommand("type", 0.0, textInput)
+                            if (deviceMode) DeviceRemote.text(textInput)
+                            else CastServerService.pushCommand("type", 0.0, textInput)
                         }
                     }
                 ) {
@@ -1820,6 +1839,15 @@ fun RemoteScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Remote target: VDO TV app vs. direct TX3 control (ADB over Wi-Fi)
+        RemoteTargetSelector(
+            isDeviceMode = deviceMode,
+            onChange = { DeviceRemote.changeMode(if (it) DeviceRemote.MODE_DEVICE else DeviceRemote.MODE_VDO) }
+        )
+
+        if (deviceMode) {
+            DeviceConnectionCard()
+        } else
         // TV Live Status Feedback Strip
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -1896,7 +1924,7 @@ fun RemoteScreen(
             FilledTonalIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("menu")
+                    if (deviceMode) DeviceRemote.key(DeviceRemote.KEY_MENU) else CastServerService.pushCommand("menu")
                 },
                 modifier = Modifier.size(50.dp),
                 shape = CircleShape,
@@ -1912,17 +1940,17 @@ fun RemoteScreen(
             FilledTonalIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("mute")
+                    if (deviceMode) DeviceRemote.key(DeviceRemote.KEY_VOLUME_MUTE) else CastServerService.pushCommand("mute")
                 },
                 modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = GtvSurfaceVariant,
-                    contentColor = if (tvStatus.muted) GtvError else GtvWarning
+                    contentColor = if (!deviceMode && tvStatus.muted) GtvError else GtvWarning
                 )
             ) {
                 Icon(
-                    if (tvStatus.muted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                    if (!deviceMode && tvStatus.muted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
                     contentDescription = "Mute",
                     modifier = Modifier.size(24.dp)
                 )
@@ -1930,12 +1958,22 @@ fun RemoteScreen(
         }
 
         // Feature 1: TV Navigation Cluster (Home, Back, Menu, Standby)
-        NavigationCluster(
-            onHome = { CastServerService.pushCommand("home") },
-            onBack = { CastServerService.pushCommand("back") },
-            onMenu = { CastServerService.pushCommand("menu") },
-            onStandby = { CastServerService.pushCommand("stop") }
-        )
+        if (deviceMode) {
+            NavigationCluster(
+                onHome = { DeviceRemote.key(DeviceRemote.KEY_HOME) },
+                onBack = { DeviceRemote.key(DeviceRemote.KEY_BACK) },
+                onMenu = { DeviceRemote.key(DeviceRemote.KEY_MENU) },
+                onStandby = { DeviceRemote.key(DeviceRemote.KEY_POWER) },
+                standbyLabel = "Power"
+            )
+        } else {
+            NavigationCluster(
+                onHome = { CastServerService.pushCommand("home") },
+                onBack = { CastServerService.pushCommand("back") },
+                onMenu = { CastServerService.pushCommand("menu") },
+                onStandby = { CastServerService.pushCommand("stop") }
+            )
+        }
 
         // Feature 2: Controller Mode Selector (D-Pad Wheel vs. Gesture Trackpad)
         RemoteModeSelector(
@@ -1944,7 +1982,27 @@ fun RemoteScreen(
         )
 
         // Center Controller Section (D-Pad Wheel OR Smooth Swipe Trackpad)
-        if (controlMode == "dpad") {
+        if (deviceMode) {
+            val sendNav: (String) -> Unit = { cmd ->
+                when (cmd) {
+                    "up" -> DeviceRemote.key(DeviceRemote.KEY_DPAD_UP)
+                    "down" -> DeviceRemote.key(DeviceRemote.KEY_DPAD_DOWN)
+                    "left" -> DeviceRemote.key(DeviceRemote.KEY_DPAD_LEFT)
+                    "right" -> DeviceRemote.key(DeviceRemote.KEY_DPAD_RIGHT)
+                    "ok" -> DeviceRemote.key(DeviceRemote.KEY_DPAD_CENTER)
+                }
+            }
+            if (controlMode == "dpad") {
+                TactileRemoteWheel(onCommand = sendNav)
+            } else {
+                GestureTrackpad(
+                    onCommand = sendNav,
+                    onSeekRelative = {},
+                    onVolumeRelative = {},
+                    navMode = true
+                )
+            }
+        } else if (controlMode == "dpad") {
             TactileRemoteWheel(onCommand = { cmd ->
                 when (cmd) {
                     "up" -> CastServerService.pushCommand("seekRelative", 30.0)
@@ -1965,13 +2023,16 @@ fun RemoteScreen(
         // Hardware-Style Dual Rocker Capsules (Volume & Seek)
         HardwareRockersRow(
             volume = tvStatus.volume,
-            isMuted = tvStatus.muted,
+            isMuted = !deviceMode && tvStatus.muted,
             onVolumeChange = { delta ->
-                CastServerService.pushCommand("volumeRelative", delta)
+                if (deviceMode) DeviceRemote.key(if (delta > 0) DeviceRemote.KEY_VOLUME_UP else DeviceRemote.KEY_VOLUME_DOWN)
+                else CastServerService.pushCommand("volumeRelative", delta)
             },
             onSeekRelative = { offset ->
-                CastServerService.pushCommand("seekRelative", offset)
-            }
+                if (deviceMode) DeviceRemote.key(if (offset > 0) DeviceRemote.KEY_MEDIA_FAST_FORWARD else DeviceRemote.KEY_MEDIA_REWIND)
+                else CastServerService.pushCommand("seekRelative", offset)
+            },
+            volumeLabel = if (deviceMode) "VOL" else null
         )
 
         // Bottom Remote Action Row: Back, Hero Play/Pause, Quick Aspect
@@ -1983,7 +2044,7 @@ fun RemoteScreen(
             OutlinedButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("back")
+                    if (deviceMode) DeviceRemote.key(DeviceRemote.KEY_BACK) else CastServerService.pushCommand("back")
                 },
                 shape = RoundedCornerShape(14.dp),
                 border = BorderStroke(1.dp, GtvBorder),
@@ -1997,21 +2058,33 @@ fun RemoteScreen(
             FilledIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("toggle")
+                    if (deviceMode) DeviceRemote.key(DeviceRemote.KEY_MEDIA_PLAY_PAUSE) else CastServerService.pushCommand("toggle")
                 },
                 modifier = Modifier.size(56.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(containerColor = GtvPrimary)
             ) {
                 Icon(
-                    if (tvStatus.status == "playing") Icons.Default.Pause else Icons.Default.PlayArrow,
+                    if (!deviceMode && tvStatus.status == "playing") Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = "Play/Pause",
                     tint = GtvOnPrimary,
                     modifier = Modifier.size(30.dp)
                 )
             }
 
-            OutlinedButton(
+            if (deviceMode) OutlinedButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    DeviceRemote.openSettings()
+                },
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, GtvBorder),
+                modifier = Modifier.height(46.dp)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Settings")
+            } else OutlinedButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     val nextAspect = when (tvStatus.aspectRatio) {
@@ -2039,13 +2112,221 @@ fun RemoteScreen(
     }
 }
 
+// ==================== DIRECT DEVICE REMOTE: TARGET SELECTOR ====================
+@Composable
+fun RemoteTargetSelector(
+    isDeviceMode: Boolean,
+    onChange: (Boolean) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = GtvSurface,
+        border = BorderStroke(1.dp, GtvBorder),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            listOf(false to "VDO TV App", true to "TX3 Direct").forEach { (device, label) ->
+                val selected = device == isDeviceMode
+                Surface(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onChange(device)
+                    },
+                    modifier = Modifier.weight(1f).height(40.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (selected) GtvPrimary else Color.Transparent
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            if (device) Icons.Default.Tv else Icons.Default.Cast,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (selected) GtvOnPrimary else GtvTextSecondary
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (selected) GtvOnPrimary else GtvTextSecondary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ==================== DIRECT DEVICE REMOTE: CONNECTION & SETUP CARD ====================
+@Composable
+fun DeviceConnectionCard() {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    var ipInput by remember { mutableStateOf(DeviceRemote.host) }
+    var showSetup by remember { mutableStateOf(DeviceRemote.host.isBlank()) }
+    val status = DeviceRemote.status
+
+    val accent = when (status) {
+        "connected" -> GtvSuccess
+        "error" -> GtvError
+        "connecting", "auth" -> GtvWarning
+        else -> GtvPrimary
+    }
+    val title = when (status) {
+        "connected" -> "TX3 • CONNECTED"
+        "connecting" -> "CONNECTING…"
+        "auth" -> "APPROVE ON TV"
+        "error" -> "NOT CONNECTED"
+        else -> "TX3 • OFFLINE"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = GtvSurface),
+        border = BorderStroke(1.dp, accent.copy(alpha = 0.4f)),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(accent)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = accent)
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { showSetup = !showSetup }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    Text(if (showSetup) "Hide setup" else "Setup", color = GtvPrimary, fontSize = 12.sp)
+                }
+            }
+
+            if (DeviceRemote.message.isNotEmpty()) {
+                Text(DeviceRemote.message, style = MaterialTheme.typography.bodySmall, color = GtvTextSecondary)
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = ipInput,
+                    onValueChange = { ipInput = it.trim() },
+                    label = { Text("TX3 IP address") },
+                    placeholder = { Text("192.168.1.50") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GtvPrimary,
+                        unfocusedBorderColor = GtvBorder,
+                        cursorColor = GtvPrimary
+                    )
+                )
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        DeviceRemote.connect(ipInput)
+                    },
+                    enabled = status != "connecting" && status != "auth",
+                    colors = ButtonDefaults.buttonColors(containerColor = GtvPrimary),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.height(56.dp)
+                ) {
+                    Text("Connect", fontWeight = FontWeight.Bold, color = GtvOnPrimary)
+                }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        DeviceRemote.scan(getLocalWifiIp(context))
+                    },
+                    enabled = !DeviceRemote.scanning,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, GtvBorder)
+                ) {
+                    if (DeviceRemote.scanning) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = GtvPrimary)
+                    } else {
+                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (DeviceRemote.scanning) "Searching…" else "Find TX3")
+                }
+                if (status == "connected") {
+                    TextButton(onClick = { DeviceRemote.disconnect() }) {
+                        Text("Disconnect", color = GtvError)
+                    }
+                }
+            }
+
+            if (DeviceRemote.found.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    DeviceRemote.found.forEach { ip ->
+                        Surface(
+                            onClick = {
+                                ipInput = ip
+                                DeviceRemote.connect(ip)
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = GtvSurfaceVariant,
+                            border = BorderStroke(1.dp, if (ip == DeviceRemote.host) GtvPrimary else GtvBorder)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Tv, contentDescription = null, tint = GtvPrimary, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(ip, style = MaterialTheme.typography.labelMedium, color = GtvTextPrimary)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (showSetup) {
+                Divider(color = GtvBorder)
+                Text("One-time setup on the TX3 (no app needed on the TV):", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = GtvTextPrimary)
+                listOf(
+                    "1. On the TX3 open Settings → Device Preferences → About and click \"Build\" 7 times until it says you are a developer.",
+                    "2. Go back to Device Preferences → Developer options and turn on \"USB debugging\" (and \"Network/ADB debugging\" if your firmware shows it).",
+                    "3. Note the TX3's IP address from Settings → Network & Internet → your Wi-Fi (phone and TX3 must be on the same Wi-Fi).",
+                    "4. Enter the IP above (or tap Find TX3) and press Connect.",
+                    "5. The TV shows \"Allow USB debugging?\" — tick \"Always allow from this computer\" and press OK with the TX3's own remote. You only do this once.",
+                    "If port 5555 stays closed, your firmware needs network ADB enabled once from a PC: connect by USB and run  adb tcpip 5555"
+                ).forEach { line ->
+                    Text(line, style = MaterialTheme.typography.bodySmall, color = GtvTextSecondary)
+                }
+            }
+        }
+    }
+}
+
 // ==================== FEATURE 1: TV NAVIGATION CLUSTER ====================
 @Composable
 fun NavigationCluster(
     onHome: () -> Unit,
     onBack: () -> Unit,
     onMenu: () -> Unit,
-    onStandby: () -> Unit
+    onStandby: () -> Unit,
+    standbyLabel: String = "Standby"
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -2135,9 +2416,9 @@ fun NavigationCluster(
             contentPadding = PaddingValues(2.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Icon(Icons.Default.PowerSettingsNew, contentDescription = "Standby", modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.PowerSettingsNew, contentDescription = standbyLabel, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.height(2.dp))
-                Text("Standby", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+                Text(standbyLabel, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
             }
         }
     }
@@ -2231,12 +2512,13 @@ fun RemoteModeSelector(
 fun GestureTrackpad(
     onCommand: (String) -> Unit,
     onSeekRelative: (Double) -> Unit,
-    onVolumeRelative: (Double) -> Unit
+    onVolumeRelative: (Double) -> Unit,
+    navMode: Boolean = false
 ) {
     val haptic = LocalHapticFeedback.current
     var totalDragX by remember { mutableFloatStateOf(0f) }
     var totalDragY by remember { mutableFloatStateOf(0f) }
-    var feedbackText by remember { mutableStateOf("Swipe to Seek / Vol • Tap for OK") }
+    var feedbackText by remember(navMode) { mutableStateOf(if (navMode) "Swipe to move • Tap for OK" else "Swipe to Seek / Vol • Tap for OK") }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2258,16 +2540,16 @@ fun GestureTrackpad(
                     .clip(RoundedCornerShape(20.dp))
                     .background(GtvSurfaceVariant)
                     .border(1.dp, GtvPrimary.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
-                    .pointerInput(Unit) {
+                    .pointerInput(navMode) {
                         detectTapGestures(
                             onTap = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                feedbackText = "🔘 Tap: Play / Pause"
-                                onCommand("toggle")
+                                feedbackText = if (navMode) "🔘 Tap: OK" else "🔘 Tap: Play / Pause"
+                                onCommand(if (navMode) "ok" else "toggle")
                             }
                         )
                     }
-                    .pointerInput(Unit) {
+                    .pointerInput(navMode) {
                         detectDragGestures(
                             onDragStart = {
                                 totalDragX = 0f
@@ -2282,7 +2564,19 @@ fun GestureTrackpad(
                                 val absY = kotlin.math.abs(totalDragY)
                                 val threshold = 70f
 
-                                if (absX > threshold && absX > absY) {
+                                if (navMode && (absX > threshold || absY > threshold)) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    val dir = if (absX > absY) (if (totalDragX > 0) "right" else "left") else (if (totalDragY > 0) "down" else "up")
+                                    feedbackText = when (dir) {
+                                        "right" -> "▶ Right"
+                                        "left" -> "◀ Left"
+                                        "down" -> "▼ Down"
+                                        else -> "▲ Up"
+                                    }
+                                    onCommand(dir)
+                                    totalDragX = 0f
+                                    totalDragY = 0f
+                                } else if (absX > threshold && absX > absY) {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     if (totalDragX > 0) {
                                         feedbackText = "⏩ Swipe Right: +15s"
@@ -2322,9 +2616,9 @@ fun GestureTrackpad(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("▲ Vol +", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
-                        Text("👆 Swipe or Tap", style = MaterialTheme.typography.labelSmall, color = GtvPrimary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                        Text("▲ Vol +", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                        Text(if (navMode) "" else "▲ Vol +", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                        Text(if (navMode) "▲ Up" else "👆 Swipe or Tap", style = MaterialTheme.typography.labelSmall, color = GtvPrimary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                        Text(if (navMode) "" else "▲ Vol +", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
                     }
 
                     Box(
@@ -2346,9 +2640,9 @@ fun GestureTrackpad(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("⏪ −15s", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                        Text(if (navMode) "◀ Left" else "⏪ −15s", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
                         Text(feedbackText, style = MaterialTheme.typography.labelSmall, color = GtvSecondary, fontWeight = FontWeight.Medium, fontSize = 11.sp)
-                        Text("+15s ⏩", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                        Text(if (navMode) "Right ▶" else "+15s ⏩", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
                     }
                 }
             }
@@ -2432,7 +2726,8 @@ fun HardwareRockersRow(
     volume: Float,
     isMuted: Boolean,
     onVolumeChange: (Double) -> Unit,
-    onSeekRelative: (Double) -> Unit
+    onSeekRelative: (Double) -> Unit,
+    volumeLabel: String? = null
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -2471,7 +2766,7 @@ fun HardwareRockersRow(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        if (isMuted) "MUTED" else "${(volume * 100).toInt()}%",
+                        volumeLabel ?: if (isMuted) "MUTED" else "${(volume * 100).toInt()}%",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = GtvTextSecondary
@@ -2528,6 +2823,551 @@ fun HardwareRockersRow(
                 }
             }
         }
+    }
+}
+EOF
+
+# ==================== DIRECT DEVICE REMOTE (ADB over Wi-Fi, no TV app needed) ====================
+cat << 'EOF' > app/src/main/java/com/example/lancast/AdbClient.kt
+package com.example.lancast
+
+import java.io.DataInputStream
+import java.io.File
+import java.io.IOException
+import java.io.OutputStream
+import java.math.BigInteger
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.security.KeyFactory
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
+import javax.crypto.Cipher
+
+/**
+ * Minimal ADB-over-TCP client (classic port 5555, RSA auth).
+ * Lets the phone send key events / text to an Android TV box (e.g. Tanix TX3)
+ * without any companion app installed on the box.
+ */
+class AdbClient(private val keyPair: KeyPair, private val identity: String = "vdo-remote@phone") {
+
+    companion object {
+        const val A_CNXN = 0x4e584e43
+        const val A_AUTH = 0x48545541
+        const val A_OPEN = 0x4e45504f
+        const val A_OKAY = 0x59414b4f
+        const val A_CLSE = 0x45534c43
+        const val A_WRTE = 0x45545257
+        const val A_VERSION = 0x01000000
+        const val MAX_PAYLOAD = 4096
+
+        const val AUTH_TOKEN = 1
+        const val AUTH_SIGNATURE = 2
+        const val AUTH_RSAPUBLICKEY = 3
+
+        private const val KEY_BITS = 2048
+        private const val KEY_WORDS = KEY_BITS / 32
+
+        // ASN.1 DigestInfo prefix for SHA-1 (adbd verifies the token as a SHA-1 digest)
+        private val SHA1_DIGEST_INFO = byteArrayOf(
+            0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e,
+            0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14
+        )
+
+        fun loadOrCreateKeyPair(dir: File): KeyPair {
+            val privFile = File(dir, "adbkey")
+            val pubFile = File(dir, "adbkey.pub.der")
+            if (privFile.exists() && pubFile.exists()) {
+                try {
+                    val kf = KeyFactory.getInstance("RSA")
+                    val priv = kf.generatePrivate(PKCS8EncodedKeySpec(privFile.readBytes()))
+                    val pub = kf.generatePublic(X509EncodedKeySpec(pubFile.readBytes()))
+                    return KeyPair(pub, priv)
+                } catch (_: Exception) {
+                    // fall through and regenerate
+                }
+            }
+            val gen = KeyPairGenerator.getInstance("RSA")
+            gen.initialize(KEY_BITS)
+            val kp = gen.generateKeyPair()
+            privFile.writeBytes(kp.private.encoded)
+            pubFile.writeBytes(kp.public.encoded)
+            return kp
+        }
+
+        /** Android's custom RSAPublicKey struct (see adb's android_pubkey.cpp). */
+        fun encodePublicKey(pub: RSAPublicKey): ByteArray {
+            val n = pub.modulus
+            val r32 = BigInteger.ONE.shiftLeft(32)
+            val n0inv = r32.subtract(n.mod(r32).modInverse(r32)).mod(r32)
+            val rr = BigInteger.ONE.shiftLeft(KEY_BITS * 2).mod(n)
+            val bb = ByteBuffer.allocate(4 + 4 + KEY_WORDS * 4 * 2 + 4).order(ByteOrder.LITTLE_ENDIAN)
+            bb.putInt(KEY_WORDS)
+            bb.putInt(n0inv.toInt())
+            for (i in 0 until KEY_WORDS) bb.putInt(n.shiftRight(32 * i).mod(r32).toInt())
+            for (i in 0 until KEY_WORDS) bb.putInt(rr.shiftRight(32 * i).mod(r32).toInt())
+            bb.putInt(pub.publicExponent.toInt())
+            return bb.array()
+        }
+
+        /** RSA PKCS#1 v1.5 signature of the 20-byte token, treated as a SHA-1 digest. */
+        fun signToken(kp: KeyPair, token: ByteArray): ByteArray {
+            val keyBytes = KEY_BITS / 8
+            val block = ByteArray(keyBytes)
+            val tailLen = SHA1_DIGEST_INFO.size + token.size
+            block[0] = 0x00
+            block[1] = 0x01
+            for (i in 2 until keyBytes - tailLen - 1) block[i] = 0xFF.toByte()
+            block[keyBytes - tailLen - 1] = 0x00
+            System.arraycopy(SHA1_DIGEST_INFO, 0, block, keyBytes - tailLen, SHA1_DIGEST_INFO.size)
+            System.arraycopy(token, 0, block, keyBytes - token.size, token.size)
+            val cipher = Cipher.getInstance("RSA/ECB/NoPadding")
+            cipher.init(Cipher.ENCRYPT_MODE, kp.private)
+            return cipher.doFinal(block)
+        }
+
+        private const val B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+        fun base64(data: ByteArray): String {
+            val sb = StringBuilder((data.size + 2) / 3 * 4)
+            var i = 0
+            while (i < data.size) {
+                val b0 = data[i].toInt() and 0xFF
+                val b1 = if (i + 1 < data.size) data[i + 1].toInt() and 0xFF else 0
+                val b2 = if (i + 2 < data.size) data[i + 2].toInt() and 0xFF else 0
+                sb.append(B64[b0 shr 2])
+                sb.append(B64[((b0 and 0x03) shl 4) or (b1 shr 4)])
+                sb.append(if (i + 1 < data.size) B64[((b1 and 0x0F) shl 2) or (b2 shr 6)] else '=')
+                sb.append(if (i + 2 < data.size) B64[b2 and 0x3F] else '=')
+                i += 3
+            }
+            return sb.toString()
+        }
+    }
+
+    private class Message(val cmd: Int, val arg0: Int, val arg1: Int, val data: ByteArray)
+
+    private var socket: Socket? = null
+    private var input: DataInputStream? = null
+    private var output: OutputStream? = null
+    private val localId = 1
+    private var remoteId = 0
+    private var maxPayload = MAX_PAYLOAD
+    private val writeAck = Semaphore(0)
+
+    @Volatile
+    var isConnected = false
+        private set
+
+    /** Called (on the reader thread) when an established connection drops. */
+    var onDisconnected: (() -> Unit)? = null
+
+    /**
+     * Connects, authenticates and opens a persistent shell stream.
+     * [onAuthPrompt] fires when the box is showing its "Allow USB debugging?" dialog.
+     */
+    fun connect(host: String, port: Int = 5555, authTimeoutMs: Int = 60_000, onAuthPrompt: () -> Unit = {}) {
+        close()
+        val s = Socket()
+        try {
+            s.tcpNoDelay = true
+            try {
+                s.connect(InetSocketAddress(host, port), 3000)
+            } catch (e: java.net.SocketTimeoutException) {
+                throw java.net.NoRouteToHostException("No answer from $host:$port")
+            }
+            s.soTimeout = 5000
+            socket = s
+            input = DataInputStream(s.getInputStream().buffered())
+            output = s.getOutputStream()
+
+            send(A_CNXN, A_VERSION, MAX_PAYLOAD, "host::\u0000".toByteArray())
+
+            var sentSignature = false
+            var sentPublicKey = false
+            while (true) {
+                val m = read()
+                if (m.cmd == A_CNXN) {
+                    if (m.arg1 in 256..(1 shl 20)) maxPayload = minOf(m.arg1, MAX_PAYLOAD)
+                    break
+                }
+                if (m.cmd != A_AUTH || m.arg0 != AUTH_TOKEN) continue
+                if (!sentSignature) {
+                    send(A_AUTH, AUTH_SIGNATURE, 0, signToken(keyPair, m.data))
+                    sentSignature = true
+                } else if (!sentPublicKey) {
+                    val pub = base64(encodePublicKey(keyPair.public as RSAPublicKey)) + " " + identity + "\u0000"
+                    send(A_AUTH, AUTH_RSAPUBLICKEY, 0, pub.toByteArray())
+                    sentPublicKey = true
+                    s.soTimeout = authTimeoutMs
+                    onAuthPrompt()
+                } else {
+                    throw IOException("Debugging authorization was rejected on the TV")
+                }
+            }
+
+            s.soTimeout = 5000
+            send(A_OPEN, localId, 0, "shell:\u0000".toByteArray())
+            while (true) {
+                val m = read()
+                if (m.cmd == A_OKAY && m.arg1 == localId) {
+                    remoteId = m.arg0
+                    break
+                }
+                if (m.cmd == A_CLSE) throw IOException("TV refused to open a shell")
+                if (m.cmd == A_WRTE) send(A_OKAY, localId, m.arg0)
+            }
+            s.soTimeout = 0
+            isConnected = true
+            Thread({ readLoop() }, "adb-reader").apply { isDaemon = true; start() }
+        } catch (e: Exception) {
+            close()
+            throw e
+        }
+    }
+
+    /** Runs one command line in the persistent shell (fire-and-forget, flow-controlled). */
+    fun exec(commandLine: String) {
+        if (!isConnected) throw IOException("Not connected")
+        val bytes = (commandLine + "\n").toByteArray()
+        var offset = 0
+        while (offset < bytes.size) {
+            val len = minOf(maxPayload, bytes.size - offset)
+            writeAck.drainPermits()
+            send(A_WRTE, localId, remoteId, bytes.copyOfRange(offset, offset + len))
+            if (!writeAck.tryAcquire(4, TimeUnit.SECONDS)) {
+                close()
+                throw IOException("TV stopped responding")
+            }
+            offset += len
+        }
+    }
+
+    fun close() {
+        isConnected = false
+        try { socket?.close() } catch (_: Exception) {}
+        socket = null
+        input = null
+        output = null
+        writeAck.release()
+    }
+
+    private fun readLoop() {
+        try {
+            while (isConnected) {
+                val m = read()
+                when (m.cmd) {
+                    A_OKAY -> writeAck.release()
+                    A_WRTE -> send(A_OKAY, localId, m.arg0)
+                    A_CLSE -> throw IOException("Shell closed")
+                }
+            }
+        } catch (_: Exception) {
+        }
+        val wasConnected = isConnected
+        close()
+        if (wasConnected) onDisconnected?.invoke()
+    }
+
+    private fun send(cmd: Int, arg0: Int, arg1: Int, data: ByteArray = ByteArray(0)) {
+        var checksum = 0
+        for (b in data) checksum += (b.toInt() and 0xFF)
+        val bb = ByteBuffer.allocate(24 + data.size).order(ByteOrder.LITTLE_ENDIAN)
+        bb.putInt(cmd).putInt(arg0).putInt(arg1).putInt(data.size).putInt(checksum).putInt(cmd.inv())
+        bb.put(data)
+        val out = output ?: throw IOException("Not connected")
+        synchronized(this) {
+            out.write(bb.array())
+            out.flush()
+        }
+    }
+
+    private fun read(): Message {
+        val inp = input ?: throw IOException("Not connected")
+        val header = ByteArray(24)
+        inp.readFully(header)
+        val bb = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
+        val cmd = bb.int
+        val arg0 = bb.int
+        val arg1 = bb.int
+        val len = bb.int
+        if (len < 0 || len > (1 shl 20)) throw IOException("Bad ADB packet")
+        val data = ByteArray(len)
+        if (len > 0) inp.readFully(data)
+        return Message(cmd, arg0, arg1, data)
+    }
+}
+EOF
+
+cat << 'EOF' > app/src/main/java/com/example/lancast/DeviceRemote.kt
+package com.example.lancast
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import java.io.File
+import java.net.ConnectException
+import java.net.InetSocketAddress
+import java.net.NoRouteToHostException
+import java.net.Socket
+import java.net.SocketTimeoutException
+import java.security.KeyPair
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
+/**
+ * Direct device remote: drives an Android TV box (e.g. Tanix TX3) over ADB on
+ * port 5555, so no companion app is needed on the TV. Every button becomes a
+ * real `input keyevent`, so it works in the launcher, settings and any app.
+ */
+object DeviceRemote {
+    const val MODE_VDO = "vdo"
+    const val MODE_DEVICE = "device"
+    const val ADB_PORT = 5555
+
+    // Android KeyEvent codes
+    const val KEY_HOME = 3
+    const val KEY_BACK = 4
+    const val KEY_DPAD_UP = 19
+    const val KEY_DPAD_DOWN = 20
+    const val KEY_DPAD_LEFT = 21
+    const val KEY_DPAD_RIGHT = 22
+    const val KEY_DPAD_CENTER = 23
+    const val KEY_VOLUME_UP = 24
+    const val KEY_VOLUME_DOWN = 25
+    const val KEY_POWER = 26
+    const val KEY_SPACE = 62
+    const val KEY_ENTER = 66
+    const val KEY_DEL = 67
+    const val KEY_MENU = 82
+    const val KEY_MEDIA_PLAY_PAUSE = 85
+    const val KEY_MEDIA_REWIND = 89
+    const val KEY_MEDIA_FAST_FORWARD = 90
+    const val KEY_MOVE_END = 123
+    const val KEY_VOLUME_MUTE = 164
+
+    var mode by mutableStateOf(MODE_VDO)
+        private set
+    var host by mutableStateOf("")
+        private set
+    /** disconnected | connecting | auth | connected | error */
+    var status by mutableStateOf("disconnected")
+        private set
+    var message by mutableStateOf("")
+        private set
+    var scanning by mutableStateOf(false)
+        private set
+    val found = mutableStateListOf<String>()
+
+    val isDeviceMode: Boolean get() = mode == MODE_DEVICE
+    val isConnected: Boolean get() = status == "connected"
+
+    private val executor = Executors.newSingleThreadExecutor()
+    private val main = Handler(Looper.getMainLooper())
+    private var prefs: SharedPreferences? = null
+    private var keyDir: File? = null
+    private var keyPair: KeyPair? = null
+    @Volatile private var client: AdbClient? = null
+
+    fun init(context: Context) {
+        if (prefs != null) return
+        val p = context.applicationContext.getSharedPreferences("device_remote", Context.MODE_PRIVATE)
+        prefs = p
+        keyDir = context.applicationContext.filesDir
+        mode = p.getString("mode", MODE_VDO) ?: MODE_VDO
+        host = p.getString("host", "") ?: ""
+        if (isDeviceMode && host.isNotBlank()) connect(host)
+    }
+
+    fun changeMode(newMode: String) {
+        mode = newMode
+        prefs?.edit()?.putString("mode", newMode)?.apply()
+        if (newMode == MODE_DEVICE && host.isNotBlank() && status != "connected" && status != "connecting" && status != "auth") {
+            connect(host)
+        }
+    }
+
+    fun connect(target: String) {
+        val h = target.trim()
+        if (h.isEmpty()) {
+            message = "Enter the TX3's IP address (Settings → Network on the box)"
+            return
+        }
+        host = h
+        prefs?.edit()?.putString("host", h)?.apply()
+        status = "connecting"
+        message = "Connecting to $h…"
+        executor.execute { doConnect(h) }
+    }
+
+    fun disconnect() {
+        executor.execute {
+            val c = client
+            client = null
+            c?.close()
+            ui {
+                status = "disconnected"
+                message = "Disconnected"
+            }
+        }
+    }
+
+    /** Sends one or more Android key codes to the box. */
+    fun key(vararg codes: Int) {
+        if (codes.isEmpty()) return
+        shell("input keyevent " + codes.joinToString(" "))
+    }
+
+    /** Types text into whatever field is focused on the box (ASCII only). */
+    fun text(value: String, pressEnter: Boolean = false) {
+        val clean = value.replace("\n", " ").replace("\r", " ").filter { it.code in 32..126 }
+        if (clean.isBlank()) return
+        val escaped = clean.replace(" ", "%s").replace("'", "'\\''")
+        shell("input text '$escaped'")
+        if (pressEnter) key(KEY_ENTER)
+    }
+
+    /** Clears the focused text field: jump to end, then backspace. */
+    fun clearText() {
+        key(KEY_MOVE_END, *IntArray(60) { KEY_DEL })
+    }
+
+    fun openSettings() = shell("am start -a android.settings.SETTINGS")
+
+    fun shell(command: String) {
+        val target = host
+        executor.execute {
+            var c = client
+            if (c == null || !c.isConnected) {
+                if (target.isBlank() || !doConnect(target)) return@execute
+                c = client
+            }
+            try {
+                c!!.exec(command)
+            } catch (_: Exception) {
+                // connection went stale (box slept / Wi-Fi blip): reconnect once and retry
+                if (doConnect(target)) {
+                    try {
+                        client?.exec(command)
+                    } catch (e: Exception) {
+                        fail("Command failed: ${e.message ?: "unknown error"}")
+                    }
+                }
+            }
+        }
+    }
+
+    /** Scans the phone's /24 subnet for hosts with ADB port 5555 open. */
+    fun scan(phoneIp: String) {
+        if (scanning) return
+        val prefix = phoneIp.substringBeforeLast('.', "")
+        if (prefix.isEmpty() || phoneIp.contains('x')) {
+            message = "Connect the phone to the same Wi-Fi as the TX3 first"
+            return
+        }
+        scanning = true
+        found.clear()
+        message = "Searching $prefix.* for a TV box with network ADB…"
+        Thread {
+            val pool = Executors.newFixedThreadPool(32)
+            val hits = java.util.Collections.synchronizedList(mutableListOf<String>())
+            for (i in 1..254) {
+                val ip = "$prefix.$i"
+                if (ip == phoneIp) continue
+                pool.execute {
+                    try {
+                        Socket().use { it.connect(InetSocketAddress(ip, ADB_PORT), 500) }
+                        hits.add(ip)
+                        ui { if (ip !in found) found.add(ip) }
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+            pool.shutdown()
+            try { pool.awaitTermination(30, TimeUnit.SECONDS) } catch (_: Exception) {}
+            ui {
+                scanning = false
+                when {
+                    hits.isEmpty() -> message = "No box with ADB on port $ADB_PORT found. Enable network/USB debugging on the TX3 (see Setup)."
+                    hits.size == 1 && status != "connected" -> connect(hits[0])
+                    else -> message = "Found ${hits.size} device(s) — tap one to connect"
+                }
+            }
+        }.start()
+    }
+
+    // Runs on the executor thread.
+    private fun doConnect(target: String): Boolean {
+        val (h, port) = parseTarget(target)
+        ui {
+            status = "connecting"
+            message = "Connecting to $h:$port…"
+        }
+        try {
+            val kp = keyPair ?: AdbClient.loadOrCreateKeyPair(keyDir ?: throw IllegalStateException("Not initialised")).also { keyPair = it }
+            client?.close()
+            client = null
+            val c = AdbClient(kp, "vdo-remote@" + android.os.Build.MODEL.replace(' ', '_'))
+            c.onDisconnected = {
+                ui {
+                    if (client === c || client == null) {
+                        status = "disconnected"
+                        message = "Connection lost — it will reconnect on the next button press"
+                    }
+                }
+            }
+            c.connect(h, port) {
+                ui {
+                    status = "auth"
+                    message = "Look at the TV: tick \"Always allow from this computer\" and press OK with the TX3 remote"
+                }
+            }
+            client = c
+            ui {
+                status = "connected"
+                message = "Controlling $h — every button now goes straight to the box"
+            }
+            return true
+        } catch (e: SocketTimeoutException) {
+            fail("No approval received. Accept the \"Allow USB debugging?\" prompt on the TV, then tap Connect again")
+        } catch (e: ConnectException) {
+            fail("$h refused port $port. Turn on network ADB / USB debugging on the TX3 (see Setup)")
+        } catch (e: NoRouteToHostException) {
+            fail("Can't reach $h — is the phone on the same Wi-Fi as the TX3?")
+        } catch (e: Exception) {
+            fail("Couldn't connect to $h: ${e.message ?: e.javaClass.simpleName}")
+        }
+        return false
+    }
+
+    private fun parseTarget(target: String): Pair<String, Int> {
+        val t = target.trim()
+        val idx = t.lastIndexOf(':')
+        if (idx > 0 && t.indexOf(':') == idx) {
+            val p = t.substring(idx + 1).toIntOrNull()
+            if (p != null && p in 1..65535) return t.substring(0, idx) to p
+        }
+        return t to ADB_PORT
+    }
+
+    private fun fail(msg: String) = ui {
+        status = "error"
+        message = msg
+    }
+
+    private fun ui(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) block() else main.post(block)
     }
 }
 EOF

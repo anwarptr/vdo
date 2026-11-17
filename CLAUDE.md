@@ -45,6 +45,7 @@ Two Android apps in one Gradle project (`rootProject.name = "VDOCastSuite"`):
   - Quick action chips: playback speed (0.75x, 1.0x, 1.25x, 1.5x, 2.0x) and aspect ratio (Fit, Fill, Stretch).
   - Network info modal showing phone's Wi-Fi IP and direct connect guidance.
   - Haptic feedback on all remote button taps and gesture swipes.
+- **Direct Device Remote (`AdbClient.kt`, `DeviceRemote.kt`)**: `VDO TV App` / `TX3 Direct` toggle on the Remote tab. In TX3 Direct mode the phone talks ADB-over-Wi-Fi (port 5555, RSA key stored in `filesDir/adbkey`) straight to the TV box, so no app is needed on the TV. Buttons become `input keyevent` (D-pad 19–23, Home 3, Back 4, Menu 82, Power 26, Vol 24/25, Mute 164, Play/Pause 85, FF/REW 90/89), and the keyboard/voice use `input text`. Supports manual IP or a /24 scan for open port 5555. One-time setup on the box: enable USB debugging, then accept the "Allow USB debugging?" prompt.
 - **Service (`CastServerService.kt`)**:
   - Starts as a foreground media playback service with notification transport controls (Play/Pause, Rewind, FastForward, Stop).
   - Keeps Wi-Fi MulticastLock and WakeLock so casting never drops when screen turns off.
