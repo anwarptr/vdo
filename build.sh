@@ -53,8 +53,8 @@ android {
         applicationId = "com.example.lancast"
         minSdk = 24
         targetSdk = 34
-        versionCode = 4
-        versionName = "2.2"
+        versionCode = 5
+        versionName = "2.3"
     }
     signingConfigs {
         create("release") {
@@ -4305,8 +4305,8 @@ android {
         applicationId = "com.example.lancasttv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 4
-        versionName = "2.2"
+        versionCode = 5
+        versionName = "2.3"
     }
     signingConfigs {
         create("release") {
@@ -4582,6 +4582,9 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.audio.ChannelMixingAudioProcessor
+import androidx.media3.common.audio.ChannelMixingMatrix
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -4622,9 +4625,45 @@ class SafeRenderersFactory(context: Context) : DefaultRenderersFactory(context) 
         enableAudioTrackPlaybackParams: Boolean
     ): AudioSink? {
         return DefaultAudioSink.Builder()
+            .setAudioProcessors(arrayOf<AudioProcessor>(stereoDownmixer()))
             .setEnableFloatOutput(false)
             .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
             .build()
+    }
+
+    /**
+     * Mixes surround audio (5.1 / 7.1 movies) down to stereo ourselves. Many TV boxes'
+     * own downmix just keeps front-left/right and drops the centre (dialogue) and LFE
+     * (bass) channels, which sounds quiet, thin and bass-less. Here every channel is
+     * folded into both speakers; output is clamped to 16-bit range by the mixer.
+     * Rows = input channels in Android/WAV order, columns = (L, R).
+     */
+    private fun stereoDownmixer(): ChannelMixingAudioProcessor {
+        val c = 0.8f   // centre / dialogue
+        val lfe = 0.7f // subwoofer / bass
+        val s = 0.6f   // surrounds
+        val mixer = ChannelMixingAudioProcessor()
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix.create(1, 2))
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix.create(2, 2))
+        // 3.0: FL FR FC
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix(3, 2, floatArrayOf(
+            1f, 0f,  0f, 1f,  c, c)))
+        // 4.0 quad: FL FR BL BR
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix(4, 2, floatArrayOf(
+            1f, 0f,  0f, 1f,  s, 0f,  0f, s)))
+        // 5.0: FL FR FC BL BR
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix(5, 2, floatArrayOf(
+            1f, 0f,  0f, 1f,  c, c,  s, 0f,  0f, s)))
+        // 5.1: FL FR FC LFE BL BR
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix(6, 2, floatArrayOf(
+            1f, 0f,  0f, 1f,  c, c,  lfe, lfe,  s, 0f,  0f, s)))
+        // 6.1: FL FR FC LFE BC SL SR
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix(7, 2, floatArrayOf(
+            1f, 0f,  0f, 1f,  c, c,  lfe, lfe,  s * 0.7f, s * 0.7f,  s, 0f,  0f, s)))
+        // 7.1: FL FR FC LFE BL BR SL SR
+        mixer.putChannelMixingMatrix(ChannelMixingMatrix(8, 2, floatArrayOf(
+            1f, 0f,  0f, 1f,  c, c,  lfe, lfe,  s * 0.8f, 0f,  0f, s * 0.8f,  s, 0f,  0f, s)))
+        return mixer
     }
 
     override fun buildVideoRenderers(
@@ -4810,6 +4849,10 @@ class TvReceiverActivity : Activity() {
                         val idx = (0 until selected.length).firstOrNull { selected.isTrackSelected(it) } ?: 0
                         val f = selected.getTrackFormat(idx)
                         Log.i("VdoTv", "Audio track: ${f.sampleMimeType} ${f.channelCount}ch ${f.sampleRate}Hz")
+                        if (f.channelCount > 2) {
+                            val layout = when (f.channelCount) { 6 -> "5.1"; 8 -> "7.1"; 7 -> "6.1"; else -> "${f.channelCount}ch" }
+                            showHud("🔊", "${(f.sampleMimeType ?: "audio").substringAfter('/').uppercase()} $layout → stereo mix")
+                        }
                     }
                 }
 
