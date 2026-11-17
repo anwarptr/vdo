@@ -10,6 +10,7 @@ mkdir -p tv/src/main/java/com/example/lancasttv
 mkdir -p tv/src/main/res/drawable
 mkdir -p tv/src/main/res/mipmap-anydpi-v26
 mkdir -p tv/src/main/res/values
+mkdir -p tv/src/main/res/xml
 
 mkdir -p gradle/wrapper
 
@@ -880,6 +881,20 @@ class CastServerService : Service() {
                 showHud('⏹', 'Standby');
               } else if (s.cmd === 'menu') {
                 osd.classList.contains('visible') ? osd.classList.remove('visible') : showOsd();
+              } else if (s.cmd === 'type') {
+                showHud('⌨️', s.strVal || 'Typed');
+              } else if (s.cmd === 'typeAndEnter') {
+                showHud('🔍', s.strVal || 'Search');
+                if (s.strVal && (s.strVal.startsWith('http://') || s.strVal.startsWith('https://'))) {
+                  v.pause();
+                  v.src = s.strVal;
+                  v.load();
+                  v.play().catch(()=>{});
+                  ambient.style.display = 'none';
+                  v.style.display = 'block';
+                }
+              } else if (s.cmd === 'key') {
+                showHud('⌨️', (s.strVal || 'KEY').toUpperCase());
               }
               reportStatus();
             } catch(e) {}
@@ -1629,6 +1644,118 @@ fun RemoteScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     val scrollState = rememberScrollState()
+    var showKeyboardDialog by remember { mutableStateOf(false) }
+
+    if (showKeyboardDialog) {
+        var textInput by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showKeyboardDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Keyboard, contentDescription = null, tint = Color(0xFF00E5FF))
+                    Text("Type on TV", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(
+                        "Type movie title, search query, or paste link to send to your TX3 Mini TV box:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF94A3B8)
+                    )
+
+                    OutlinedTextField(
+                        value = textInput,
+                        onValueChange = { textInput = it },
+                        placeholder = { Text("Search YouTube, Netflix, or web...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        trailingIcon = {
+                            if (textInput.isNotEmpty()) {
+                                IconButton(onClick = { textInput = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                }
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF00E5FF),
+                            unfocusedBorderColor = Color(0xFF334155),
+                            cursorColor = Color(0xFF00E5FF)
+                        )
+                    )
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        OutlinedButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                CastServerService.pushCommand("key", 0.0, "backspace")
+                                if (textInput.isNotEmpty()) textInput = textInput.dropLast(1)
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Backspace, contentDescription = "Delete", modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Delete", fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                CastServerService.pushCommand("key", 0.0, "space")
+                                textInput += " "
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("Space", fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                CastServerService.pushCommand("key", 0.0, "clear")
+                                textInput = ""
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("Clear", fontSize = 12.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (textInput.isNotBlank()) {
+                            CastServerService.pushCommand("typeAndEnter", 0.0, textInput)
+                            showKeyboardDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Send & Search", fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (textInput.isNotBlank()) {
+                            CastServerService.pushCommand("type", 0.0, textInput)
+                        }
+                    }
+                ) {
+                    Text("Type Only", color = Color(0xFF00E5FF))
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -1672,9 +1799,9 @@ fun RemoteScreen(
             }
         }
 
-        // Remote Top Utility Bar (Power / Standby, TV Menu, Mute)
+        // Remote Top Utility Bar (Power, Menu, Type on TV Keyboard, Mute)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1683,7 +1810,7 @@ fun RemoteScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     CastServerService.pushCommand("stop")
                 },
-                modifier = Modifier.size(52.dp),
+                modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = Color(0xFF200F17),
@@ -1698,7 +1825,7 @@ fun RemoteScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     CastServerService.pushCommand("menu")
                 },
-                modifier = Modifier.size(52.dp),
+                modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = Color(0xFF131D31),
@@ -1711,9 +1838,24 @@ fun RemoteScreen(
             FilledTonalIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    showKeyboardDialog = true
+                },
+                modifier = Modifier.size(50.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF131D31),
+                    contentColor = Color(0xFF38BDF8)
+                )
+            ) {
+                Icon(Icons.Default.Keyboard, contentDescription = "Type on TV", modifier = Modifier.size(24.dp))
+            }
+
+            FilledTonalIconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     CastServerService.pushCommand("mute")
                 },
-                modifier = Modifier.size(52.dp),
+                modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = Color(0xFF131D31),
@@ -2219,8 +2361,28 @@ cat << 'EOF' > tv/src/main/AndroidManifest.xml
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- VDO Remote Keyboard Input Method Service for TX3 Mini & Android TV -->
+        <service
+            android:name=".VdoRemoteImeService"
+            android:label="VDO Remote Keyboard"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
     </application>
 </manifest>
+EOF
+
+cat << 'EOF' > tv/src/main/res/xml/method.xml
+<?xml version="1.0" encoding="utf-8"?>
+<input-method xmlns:android="http://schemas.android.com/apk/res/android"
+    android:settingsActivity="com.example.lancasttv.TvReceiverActivity" />
 EOF
 
 cat << 'EOF' > tv/src/main/java/com/example/lancasttv/TvReceiverActivity.kt
@@ -2428,6 +2590,199 @@ class TvReceiverActivity : Activity() {
 
     override fun onDestroy() {
         try { discoveryListener?.let { nsdManager.stopServiceDiscovery(it) } } catch (_: Exception) {}
+        super.onDestroy()
+    }
+}
+EOF
+
+cat << 'EOF' > tv/src/main/java/com/example/lancasttv/VdoRemoteImeService.kt
+package com.example.lancasttv
+
+import android.inputmethodservice.InputMethodService
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
+import android.os.Handler
+import android.os.Looper
+import android.view.Gravity
+import android.view.KeyEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.TextView
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+
+class VdoRemoteImeService : InputMethodService() {
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var isPolling = false
+    private var lastSeq = 0
+    private var phoneHost: String? = null
+    private var phonePort: Int = 5050
+    private var nsdManager: NsdManager? = null
+    private var discoveryListener: NsdManager.DiscoveryListener? = null
+    private var infoView: TextView? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        nsdManager = getSystemService(NSD_SERVICE) as? NsdManager
+        startNsdDiscovery()
+    }
+
+    override fun onCreateInputView(): View {
+        val root = FrameLayout(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setBackgroundColor(android.graphics.Color.parseColor("#E605070E"))
+            setPadding(32, 20, 32, 20)
+        }
+
+        infoView = TextView(this).apply {
+            text = "⌨️ VDO Remote Keyboard • Type on phone or use TX3 remote"
+            setTextColor(android.graphics.Color.parseColor("#00E5FF"))
+            textSize = 16f
+            gravity = Gravity.CENTER
+            setPadding(16, 12, 16, 12)
+        }
+        root.addView(infoView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT))
+        return root
+    }
+
+    override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        startStatePolling()
+    }
+
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+        stopStatePolling()
+    }
+
+    private fun startNsdDiscovery() {
+        discoveryListener = object : NsdManager.DiscoveryListener {
+            override fun onDiscoveryStarted(regType: String) {}
+            override fun onServiceFound(service: NsdServiceInfo) {
+                val isTarget = service.serviceType.contains("_vdocast") || service.serviceType.contains("_lancast")
+                if (isTarget) {
+                    nsdManager?.resolveService(service, object : NsdManager.ResolveListener {
+                        override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) {}
+                        override fun onServiceResolved(info: NsdServiceInfo) {
+                            phoneHost = info.host?.hostAddress
+                            phonePort = info.port
+                        }
+                    })
+                }
+            }
+            override fun onServiceLost(service: NsdServiceInfo) {}
+            override fun onDiscoveryStopped(serviceType: String) {}
+            override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {}
+            override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
+        }
+        try {
+            nsdManager?.discoverServices("_vdocast._tcp.", NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+        } catch (_: Exception) {}
+    }
+
+    private fun startStatePolling() {
+        if (isPolling) return
+        isPolling = true
+        Thread {
+            while (isPolling) {
+                val host = phoneHost
+                if (host != null) {
+                    try {
+                        val url = URL("http://$host:$phonePort/api/state")
+                        val conn = (url.openConnection() as HttpURLConnection).apply {
+                            connectTimeout = 1200
+                            readTimeout = 1200
+                        }
+                        if (conn.responseCode == 200) {
+                            val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                            val resp = reader.readText()
+                            reader.close()
+                            val json = JSONObject(resp)
+                            val seq = json.optInt("seq", 0)
+                            if (seq != lastSeq) {
+                                lastSeq = seq
+                                val cmd = json.optString("cmd", "")
+                                val strVal = json.optString("strVal", "")
+                                handler.post { handleCommand(cmd, strVal) }
+                            }
+                        }
+                        conn.disconnect()
+                    } catch (_: Exception) {}
+                }
+                try { Thread.sleep(200) } catch (_: Exception) {}
+            }
+        }.start()
+    }
+
+    private fun stopStatePolling() {
+        isPolling = false
+    }
+
+    private fun handleCommand(cmd: String, strVal: String) {
+        val ic = currentInputConnection
+        when (cmd) {
+            "type" -> {
+                ic?.commitText(strVal, 1)
+                injectShellText(strVal)
+            }
+            "typeAndEnter" -> {
+                ic?.commitText(strVal, 1)
+                ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+                ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
+                injectShellText(strVal)
+                injectShellKey(KeyEvent.KEYCODE_ENTER)
+            }
+            "key" -> {
+                when (strVal.lowercase()) {
+                    "backspace" -> {
+                        ic?.deleteSurroundingText(1, 0)
+                        injectShellKey(KeyEvent.KEYCODE_DEL)
+                    }
+                    "enter" -> {
+                        ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+                        ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
+                        injectShellKey(KeyEvent.KEYCODE_ENTER)
+                    }
+                    "space" -> {
+                        ic?.commitText(" ", 1)
+                        injectShellKey(KeyEvent.KEYCODE_SPACE)
+                    }
+                    "clear" -> {
+                        ic?.deleteSurroundingText(100, 100)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun injectShellText(text: String) {
+        try {
+            val safe = text.replace(" ", "%s").replace("'", "\\'")
+            Runtime.getRuntime().exec(arrayOf("sh", "-c", "input text '$safe'"))
+        } catch (_: Exception) {}
+    }
+
+    private fun injectShellKey(keyCode: Int) {
+        try {
+            Runtime.getRuntime().exec(arrayOf("sh", "-c", "input keyevent $keyCode"))
+        } catch (_: Exception) {}
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onDestroy() {
+        stopStatePolling()
+        try { discoveryListener?.let { nsdManager?.stopServiceDiscovery(it) } } catch (_: Exception) {}
         super.onDestroy()
     }
 }
