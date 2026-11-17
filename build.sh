@@ -53,8 +53,8 @@ android {
         applicationId = "com.example.lancast"
         minSdk = 24
         targetSdk = 34
-        versionCode = 3
-        versionName = "2.1"
+        versionCode = 4
+        versionName = "2.2"
     }
     signingConfigs {
         create("release") {
@@ -4305,8 +4305,8 @@ android {
         applicationId = "com.example.lancasttv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 3
-        versionName = "2.1"
+        versionCode = 4
+        versionName = "2.2"
     }
     signingConfigs {
         create("release") {
@@ -4579,13 +4579,16 @@ import android.widget.TextView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
 import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -4604,6 +4607,24 @@ import java.util.Locale
 class SafeRenderersFactory(context: Context) : DefaultRenderersFactory(context) {
     init {
         setEnableDecoderFallback(true)
+    }
+
+    /**
+     * Always output decoded PCM. With a Context, DefaultAudioSink reads the HDMI sink's
+     * capabilities and, on TV boxes like the TX3, sends AC3/E-AC3/DTS as compressed
+     * passthrough; if the TV/soundbar can't decode that the result is silent video.
+     * Building the sink without a Context limits it to PCM (no passthrough, no offload).
+     */
+    @Suppress("DEPRECATION")
+    override fun buildAudioSink(
+        context: Context,
+        enableFloatOutput: Boolean,
+        enableAudioTrackPlaybackParams: Boolean
+    ): AudioSink? {
+        return DefaultAudioSink.Builder()
+            .setEnableFloatOutput(false)
+            .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+            .build()
     }
 
     override fun buildVideoRenderers(
@@ -4640,7 +4661,24 @@ class SafeRenderersFactory(context: Context) : DefaultRenderersFactory(context) 
         eventListener: AudioRendererEventListener,
         out: ArrayList<Renderer>
     ) {
-        // 1. Hardware MediaCodec audio renderers (AAC, MP3, hardware AC3)
+        // 1. FFmpeg software audio decoder FIRST: decodes AAC/MP3/AC3/E-AC3/DTS/Opus/FLAC to PCM
+        //    identically on every device. Amlogic boxes (TX3) ship AC3/DTS MediaCodec decoders
+        //    that can output silence without a Dolby/DTS licence, so don't let them win.
+        try {
+            val clazz = Class.forName("androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer")
+            val constructor = clazz.getConstructor(
+                Handler::class.java,
+                AudioRendererEventListener::class.java,
+                AudioSink::class.java
+            )
+            val renderer = constructor.newInstance(eventHandler, eventListener, audioSink) as Renderer
+            out.add(renderer)
+            Log.i("VdoTv", "FFmpeg audio renderer loaded (preferred)")
+        } catch (e: Throwable) {
+            Log.w("VdoTv", "FFmpeg audio renderer not available: ${e.message}")
+        }
+
+        // 2. Hardware MediaCodec audio renderers as fallback for formats FFmpeg can't handle
         super.buildAudioRenderers(
             context,
             EXTENSION_RENDERER_MODE_OFF,
@@ -4651,21 +4689,6 @@ class SafeRenderersFactory(context: Context) : DefaultRenderersFactory(context) 
             eventListener,
             out
         )
-
-        // 2. FFmpeg audio renderer fallback for software decoding of AC3 / E-AC3 / DTS
-        try {
-            val clazz = Class.forName("androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer")
-            val constructor = clazz.getConstructor(
-                Handler::class.java,
-                AudioRendererEventListener::class.java,
-                AudioSink::class.java
-            )
-            val renderer = constructor.newInstance(eventHandler, eventListener, audioSink) as Renderer
-            out.add(renderer)
-            Log.i("VdoTv", "FFmpeg audio renderer successfully loaded for AC3/DTS software fallback")
-        } catch (e: Throwable) {
-            Log.w("VdoTv", "FFmpeg audio renderer not available: ${e.message}")
-        }
     }
 }
 
@@ -4772,6 +4795,22 @@ class TvReceiverActivity : Activity() {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     isPlaybackPlaying = isPlaying
                     updateOsdProgress()
+                }
+
+                override fun onTracksChanged(tracks: Tracks) {
+                    // Tell the viewer when a video has audio we can't play, instead of silent video
+                    val audioGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }
+                    if (audioGroups.isEmpty()) return
+                    val selected = audioGroups.firstOrNull { it.isSelected }
+                    if (selected == null) {
+                        val mime = audioGroups.first().getTrackFormat(0).sampleMimeType ?: "unknown"
+                        Log.w("VdoTv", "No playable audio track, format=$mime")
+                        showHud("🔇", "Audio format not supported: ${mime.substringAfter('/')}")
+                    } else {
+                        val idx = (0 until selected.length).firstOrNull { selected.isTrackSelected(it) } ?: 0
+                        val f = selected.getTrackFormat(idx)
+                        Log.i("VdoTv", "Audio track: ${f.sampleMimeType} ${f.channelCount}ch ${f.sampleRate}Hz")
+                    }
                 }
 
                 override fun onPlayerError(error: PlaybackException) {
