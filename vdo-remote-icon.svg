@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512">
+  <!-- Dark Studio Background -->
+  <rect width="108" height="108" fill="#060913" rx="24"/>
+  <circle cx="54" cy="54" r="46" fill="#0E1626"/>
+  <circle cx="54" cy="54" r="32" fill="#152037"/>
+
+  <!-- Radiating Cast Signal Waves -->
+  <path stroke="#818CF8" stroke-width="3" stroke-linecap="round" fill="none" d="M81,38 a26,26 0 0,1 0,32" />
+  <path stroke="#00E5FF" stroke-width="3.2" stroke-linecap="round" fill="none" d="M75,44 a18,18 0 0,1 0,20" />
+  <path stroke="#818CF8" stroke-width="3" stroke-linecap="round" fill="none" d="M27,38 a26,26 0 0,0 0,32" />
+  <path stroke="#00E5FF" stroke-width="3.2" stroke-linecap="round" fill="none" d="M33,44 a18,18 0 0,0 0,20" />
+
+  <!-- Sleek Modern Smartphone Remote Body -->
+  <rect x="43" y="26" width="22" height="56" rx="6" fill="#00E5FF"/>
+
+  <!-- Inset Display Screen -->
+  <rect x="41" y="33" width="26" height="28" rx="2" fill="#060913"/>
+
+  <!-- Glowing Play Emblem -->
+  <polygon points="50,42 62,47 50,52" fill="#00E5FF"/>
+
+  <!-- Remote Navigation Keypad Array -->
+  <circle cx="54" cy="69" r="3.5" fill="#060913"/>
+  <circle cx="45" cy="69" r="1.8" fill="#060913"/>
+  <circle cx="63" cy="69" r="1.8" fill="#060913"/>
+</svg>
