@@ -12,3 +12,4 @@ release.keystore
 *.keystore
 *.apk
 *.log
+!signing/vdo-release.keystore

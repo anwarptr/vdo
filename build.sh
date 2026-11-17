@@ -53,8 +53,8 @@ android {
         applicationId = "com.example.lancast"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 3
+        versionName = "2.1"
     }
     signingConfigs {
         create("release") {
@@ -233,6 +233,13 @@ cat << 'EOF' > app/src/main/AndroidManifest.xml
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
 
     <application
         android:label="@string/app_name"
@@ -1134,7 +1141,7 @@ fun VdoMainScreen(initialUri: Uri?) {
     val deviceMode = DeviceRemote.isDeviceMode
     val pillConnected = if (deviceMode) DeviceRemote.isConnected else isConnected
     val pillLabel = when {
-        deviceMode && DeviceRemote.isConnected -> "TX3 Linked"
+        deviceMode && DeviceRemote.isConnected -> if (DeviceRemote.isBluetoothMode) "TX3 • BT" else "TX3 Linked"
         deviceMode -> "TX3 Offline"
         isConnected -> "VDO TV"
         else -> "Wi-Fi Ready"
@@ -1841,11 +1848,13 @@ fun RemoteScreen(
     ) {
         // Remote target: VDO TV app vs. direct TX3 control (ADB over Wi-Fi)
         RemoteTargetSelector(
-            isDeviceMode = deviceMode,
-            onChange = { DeviceRemote.changeMode(if (it) DeviceRemote.MODE_DEVICE else DeviceRemote.MODE_VDO) }
+            currentMode = DeviceRemote.mode,
+            onChange = { DeviceRemote.changeMode(it) }
         )
 
-        if (deviceMode) {
+        if (DeviceRemote.isBluetoothMode) {
+            BluetoothRemoteCard()
+        } else if (deviceMode) {
             DeviceConnectionCard()
         } else
         // TV Live Status Feedback Strip
@@ -2075,15 +2084,15 @@ fun RemoteScreen(
             if (deviceMode) OutlinedButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    DeviceRemote.openSettings()
+                    if (DeviceRemote.isBluetoothMode) DeviceRemote.key(DeviceRemote.KEY_SEARCH) else DeviceRemote.openSettings()
                 },
                 shape = RoundedCornerShape(14.dp),
                 border = BorderStroke(1.dp, GtvBorder),
                 modifier = Modifier.height(46.dp)
             ) {
-                Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(if (DeviceRemote.isBluetoothMode) Icons.Default.Search else Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Settings")
+                Text(if (DeviceRemote.isBluetoothMode) "Search" else "Settings")
             } else OutlinedButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -2115,8 +2124,8 @@ fun RemoteScreen(
 // ==================== DIRECT DEVICE REMOTE: TARGET SELECTOR ====================
 @Composable
 fun RemoteTargetSelector(
-    isDeviceMode: Boolean,
-    onChange: (Boolean) -> Unit
+    currentMode: String,
+    onChange: (String) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -2130,12 +2139,16 @@ fun RemoteTargetSelector(
             modifier = Modifier.padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            listOf(false to "VDO TV App", true to "TX3 Direct").forEach { (device, label) ->
-                val selected = device == isDeviceMode
+            listOf(
+                Triple(DeviceRemote.MODE_VDO, "VDO TV", Icons.Default.Cast),
+                Triple(DeviceRemote.MODE_DEVICE, "TX3 Wi-Fi", Icons.Default.Wifi),
+                Triple(DeviceRemote.MODE_BT, "Bluetooth", Icons.Default.Bluetooth)
+            ).forEach { (mode, label, icon) ->
+                val selected = mode == currentMode
                 Surface(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onChange(device)
+                        onChange(mode)
                     },
                     modifier = Modifier.weight(1f).height(40.dp),
                     shape = RoundedCornerShape(10.dp),
@@ -2147,19 +2160,196 @@ fun RemoteTargetSelector(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            if (device) Icons.Default.Tv else Icons.Default.Cast,
+                            icon,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(15.dp),
                             tint = if (selected) GtvOnPrimary else GtvTextSecondary
                         )
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(4.dp))
                         Text(
                             label,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            maxLines = 1,
                             color = if (selected) GtvOnPrimary else GtvTextSecondary
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+// ==================== BLUETOOTH REMOTE: PAIRING & STATUS CARD ====================
+@Composable
+fun BluetoothRemoteCard() {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val state = BtRemote.state
+    var showSetup by remember { mutableStateOf(!BtRemote.isConnected) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { BtRemote.start(context) }
+    val enableLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { BtRemote.start(context) }
+    val discoverableLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { }
+
+    LaunchedEffect(Unit) {
+        if (!BtRemote.hasPermissions(context)) permissionLauncher.launch(BtRemote.requiredPermissions())
+        else BtRemote.start(context)
+    }
+
+    val accent = when (state) {
+        "connected" -> GtvSuccess
+        "error", "unsupported" -> GtvError
+        "connecting", "starting" -> GtvWarning
+        else -> GtvPrimary
+    }
+    val title = when (state) {
+        "connected" -> "BLUETOOTH • ${BtRemote.connectedName.uppercase()}"
+        "connecting" -> "CONNECTING…"
+        "starting" -> "STARTING…"
+        "ready" -> "READY TO PAIR"
+        "off" -> "BLUETOOTH OFF"
+        "permission" -> "PERMISSION NEEDED"
+        "unsupported" -> "NOT SUPPORTED"
+        else -> "NOT CONNECTED"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = GtvSurface),
+        border = BorderStroke(1.dp, accent.copy(alpha = 0.4f)),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(accent))
+                Spacer(Modifier.width(8.dp))
+                Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                TextButton(onClick = { showSetup = !showSetup }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    Text(if (showSetup) "Hide setup" else "Setup", color = GtvPrimary, fontSize = 12.sp)
+                }
+            }
+
+            if (BtRemote.message.isNotEmpty()) {
+                Text(BtRemote.message, style = MaterialTheme.typography.bodySmall, color = GtvTextSecondary)
+            }
+
+            when (state) {
+                "permission" -> Button(
+                    onClick = { permissionLauncher.launch(BtRemote.requiredPermissions()) },
+                    colors = ButtonDefaults.buttonColors(containerColor = GtvPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Allow Bluetooth", fontWeight = FontWeight.Bold, color = GtvOnPrimary) }
+                "off" -> Button(
+                    onClick = { try { enableLauncher.launch(BtRemote.enableIntent()) } catch (_: Exception) {} },
+                    colors = ButtonDefaults.buttonColors(containerColor = GtvPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Turn on Bluetooth", fontWeight = FontWeight.Bold, color = GtvOnPrimary) }
+                "error" -> Button(
+                    onClick = { BtRemote.stop(); BtRemote.start(context) },
+                    colors = ButtonDefaults.buttonColors(containerColor = GtvPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Retry", fontWeight = FontWeight.Bold, color = GtvOnPrimary) }
+                "unsupported" -> {}
+                else -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            try { discoverableLauncher.launch(BtRemote.discoverableIntent()) } catch (_: Exception) {}
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, GtvBorder),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Make phone visible", fontSize = 12.sp)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            BtRemote.scan()
+                        },
+                        enabled = !BtRemote.scanning,
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, GtvBorder),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        if (BtRemote.scanning) CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = GtvPrimary)
+                        else Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (BtRemote.scanning) "Searching…" else "Find TX3", fontSize = 12.sp)
+                    }
+                }
+            }
+
+            if (BtRemote.devices.isNotEmpty() && state != "unsupported" && state != "permission" && state != "off") {
+                Text("Tap your TX3:", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary)
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BtRemote.devices.forEach { dev ->
+                        val isCurrent = state == "connected" && dev.name == BtRemote.connectedName
+                        Surface(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (isCurrent) BtRemote.disconnect() else BtRemote.connect(dev.address)
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = GtvSurfaceVariant,
+                            border = BorderStroke(1.dp, if (isCurrent) GtvSuccess else if (dev.likelyTv) GtvPrimary.copy(alpha = 0.5f) else GtvBorder)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    if (dev.likelyTv) Icons.Default.Tv else Icons.Default.Bluetooth,
+                                    contentDescription = null,
+                                    tint = if (isCurrent) GtvSuccess else GtvPrimary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Column {
+                                    Text(dev.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = GtvTextPrimary, maxLines = 1)
+                                    Text(
+                                        when {
+                                            isCurrent -> "connected • tap to disconnect"
+                                            dev.bonded -> "paired"
+                                            else -> "tap to pair"
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isCurrent) GtvSuccess else GtvTextSecondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (showSetup) {
+                Divider(color = GtvBorder)
+                Text("Pair once (no app and no debugging needed on the TX3):", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = GtvTextPrimary)
+                listOf(
+                    "1. On the TX3 open Settings → Bluetooth (or Remotes & Accessories → Add accessory) and leave that screen open.",
+                    "2. Easiest: tap \"Make phone visible\" here, then choose this phone in the TX3's list and confirm the pairing code on both screens.",
+                    "3. Or tap \"Find TX3\" here and pick the TX3 from the list — accept the pairing request on both devices.",
+                    "4. Once connected the phone works like a Bluetooth keyboard + remote: D-pad, OK, Back, Home, volume, media keys and typing.",
+                    "Next time just open this tab — it reconnects to the TX3 automatically."
+                ).forEach { line ->
+                    Text(line, style = MaterialTheme.typography.bodySmall, color = GtvTextSecondary)
                 }
             }
         }
@@ -3115,6 +3305,522 @@ class AdbClient(private val keyPair: KeyPair, private val identity: String = "vd
 }
 EOF
 
+cat << 'EOF' > app/src/main/java/com/example/lancast/BtRemote.kt
+package com.example.lancast
+
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothClass
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothHidDevice
+import android.bluetooth.BluetoothHidDeviceAppSdpSettings
+import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import java.util.concurrent.Executors
+
+/**
+ * Bluetooth remote: the phone registers itself as a Bluetooth HID keyboard + media remote
+ * (BluetoothHidDevice, Android 9+). The TV box pairs with it like any Bluetooth keyboard,
+ * so nothing has to be installed or enabled on the box.
+ */
+@SuppressLint("MissingPermission")
+object BtRemote {
+    data class BtDevice(val address: String, val name: String, val bonded: Boolean, val likelyTv: Boolean)
+
+    /** unsupported | off | permission | starting | ready | connecting | connected | error */
+    var state by mutableStateOf("off")
+        private set
+    var message by mutableStateOf("")
+        private set
+    var connectedName by mutableStateOf("")
+        private set
+    var scanning by mutableStateOf(false)
+        private set
+    val devices = mutableStateListOf<BtDevice>()
+
+    val isConnected: Boolean get() = state == "connected"
+
+    private const val REPORT_KEYBOARD = 1
+    private const val REPORT_CONSUMER = 2
+    private const val MOD_SHIFT = 0x02
+
+    // Keyboard (report 1) + Consumer Control (report 2) composite descriptor
+    private val DESCRIPTOR = intArrayOf(
+        0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, REPORT_KEYBOARD,
+        0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02,
+        0x95, 0x01, 0x75, 0x08, 0x81, 0x01,
+        0x95, 0x06, 0x75, 0x08, 0x15, 0x00, 0x25, 0x65, 0x05, 0x07, 0x19, 0x00, 0x29, 0x65, 0x81, 0x00,
+        0xC0,
+        0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, REPORT_CONSUMER,
+        0x15, 0x00, 0x26, 0xFF, 0x03, 0x19, 0x00, 0x2A, 0xFF, 0x03, 0x75, 0x10, 0x95, 0x01, 0x81, 0x00,
+        0xC0
+    ).map { it.toByte() }.toByteArray()
+
+    // Android KeyEvent code -> HID keyboard usage
+    private val KEYBOARD_MAP = mapOf(
+        19 to 0x52, // DPAD_UP -> Up arrow
+        20 to 0x51, // DPAD_DOWN -> Down arrow
+        21 to 0x50, // DPAD_LEFT -> Left arrow
+        22 to 0x4F, // DPAD_RIGHT -> Right arrow
+        23 to 0x28, // DPAD_CENTER -> Enter (confirm key on Android TV)
+        66 to 0x28, // ENTER
+        67 to 0x2A, // DEL -> Backspace
+        62 to 0x2C, // SPACE
+        111 to 0x29, // ESCAPE
+        123 to 0x4D // MOVE_END -> End
+    )
+
+    // Android KeyEvent code -> HID consumer usage
+    private val CONSUMER_MAP = mapOf(
+        3 to 0x223, // HOME -> AC Home
+        4 to 0x224, // BACK -> AC Back
+        82 to 0x040, // MENU -> Menu
+        26 to 0x030, // POWER
+        24 to 0x0E9, // VOLUME_UP
+        25 to 0x0EA, // VOLUME_DOWN
+        164 to 0x0E2, // MUTE
+        85 to 0x0CD, // MEDIA_PLAY_PAUSE
+        90 to 0x0B3, // MEDIA_FAST_FORWARD
+        89 to 0x0B4, // MEDIA_REWIND
+        84 to 0x221 // SEARCH -> AC Search
+    )
+
+    private val main = Handler(Looper.getMainLooper())
+    private val sender = Executors.newSingleThreadExecutor()
+    private var appContext: Context? = null
+    private var adapter: BluetoothAdapter? = null
+    private var hid: BluetoothHidDevice? = null
+    private var host: BluetoothDevice? = null
+    private var pendingConnect: String? = null
+    private var receiverRegistered = false
+    private var started = false
+
+    fun requiredPermissions(): Array<String> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) arrayOf(
+            "android.permission.BLUETOOTH_CONNECT",
+            "android.permission.BLUETOOTH_SCAN",
+            "android.permission.BLUETOOTH_ADVERTISE"
+        ) else arrayOf("android.permission.ACCESS_FINE_LOCATION")
+
+    fun hasPermissions(context: Context): Boolean = requiredPermissions().all {
+        context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun prefs(ctx: Context) = ctx.getSharedPreferences("bt_remote", Context.MODE_PRIVATE)
+
+    /** Registers the phone as a Bluetooth keyboard/remote. Safe to call repeatedly. */
+    fun start(context: Context) {
+        val ctx = context.applicationContext
+        appContext = ctx
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            state = "unsupported"
+            message = "Bluetooth remote needs Android 9 or newer on the phone."
+            return
+        }
+        if (!hasPermissions(ctx)) {
+            state = "permission"
+            message = "Allow the Nearby devices / Bluetooth permission to use the phone as a Bluetooth remote."
+            return
+        }
+        val a = (ctx.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+        if (a == null) {
+            state = "unsupported"
+            message = "This phone has no Bluetooth."
+            return
+        }
+        adapter = a
+        registerReceiver(ctx)
+        if (!a.isEnabled) {
+            state = "off"
+            message = "Turn on Bluetooth on the phone."
+            return
+        }
+        if (started) {
+            refreshDevices()
+            return
+        }
+        started = true
+        state = "starting"
+        message = "Starting Bluetooth remote…"
+        val ok = a.getProfileProxy(ctx, object : BluetoothProfile.ServiceListener {
+            override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                if (profile != BluetoothProfile.HID_DEVICE) return
+                hid = proxy as BluetoothHidDevice
+                registerApp()
+            }
+
+            override fun onServiceDisconnected(profile: Int) {
+                if (profile != BluetoothProfile.HID_DEVICE) return
+                hid = null
+                host = null
+                started = false
+                ui {
+                    state = "error"
+                    message = "Bluetooth service stopped — tap Retry."
+                }
+            }
+        }, BluetoothProfile.HID_DEVICE)
+        if (!ok) {
+            started = false
+            state = "unsupported"
+            message = "This phone doesn't allow acting as a Bluetooth keyboard."
+        }
+        refreshDevices()
+    }
+
+    fun stop() {
+        try {
+            host?.let { hid?.disconnect(it) }
+            hid?.unregisterApp()
+            hid?.let { adapter?.closeProfileProxy(BluetoothProfile.HID_DEVICE, it) }
+        } catch (_: Exception) {
+        }
+        hid = null
+        host = null
+        started = false
+        connectedName = ""
+        state = "off"
+    }
+
+    private val callback = object : BluetoothHidDevice.Callback() {
+        override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
+            ui {
+                if (!registered) {
+                    if (state != "connected") {
+                        state = "error"
+                        message = "Couldn't register as a Bluetooth keyboard (another keyboard app may be active). Tap Retry."
+                    }
+                    return@ui
+                }
+                if (state != "connected") {
+                    state = "ready"
+                    message = "Ready. Pair from the TX3 or tap your TX3 below."
+                }
+                val saved = appContext?.let { prefs(it).getString("host", null) }
+                val target = pendingConnect ?: pluggedDevice?.address ?: saved
+                pendingConnect = null
+                if (target != null) connect(target)
+            }
+        }
+
+        override fun onConnectionStateChanged(device: BluetoothDevice, newState: Int) {
+            ui {
+                when (newState) {
+                    BluetoothProfile.STATE_CONNECTED -> {
+                        host = device
+                        connectedName = safeName(device)
+                        state = "connected"
+                        message = "Connected to $connectedName — every button goes to the TV over Bluetooth."
+                        appContext?.let { prefs(it).edit().putString("host", device.address).apply() }
+                        refreshDevices()
+                    }
+                    BluetoothProfile.STATE_CONNECTING -> {
+                        state = "connecting"
+                        message = "Connecting to ${safeName(device)}…"
+                    }
+                    BluetoothProfile.STATE_DISCONNECTED -> {
+                        if (host?.address == device.address || state == "connecting") {
+                            host = null
+                            connectedName = ""
+                            state = if (hid != null) "ready" else "error"
+                            message = "Disconnected. Tap your TX3 below to reconnect."
+                        }
+                    }
+                }
+            }
+        }
+
+        override fun onGetReport(device: BluetoothDevice, type: Byte, id: Byte, bufferSize: Int) {
+            val size = if (id.toInt() == REPORT_CONSUMER) 2 else 8
+            try { hid?.replyReport(device, type, id, ByteArray(size)) } catch (_: Exception) {}
+        }
+    }
+
+    private fun registerApp() {
+        val h = hid ?: return
+        val sdp = BluetoothHidDeviceAppSdpSettings(
+            "VDO Remote",
+            "VDO Remote keyboard & TV remote",
+            "VDO Cast",
+            BluetoothHidDevice.SUBCLASS1_KEYBOARD,
+            DESCRIPTOR
+        )
+        try {
+            val ok = h.registerApp(sdp, null, null, { it.run() }, callback)
+            if (!ok) ui {
+                state = "error"
+                message = "Couldn't register as a Bluetooth keyboard. Close other Bluetooth keyboard apps and tap Retry."
+            }
+        } catch (e: Exception) {
+            ui {
+                state = "error"
+                message = "Bluetooth keyboard not available: ${e.message}"
+            }
+        }
+    }
+
+    /** Connect to a TV box; pairs first if needed. */
+    fun connect(address: String) {
+        val a = adapter ?: return
+        val h = hid
+        try {
+            val device = a.getRemoteDevice(address)
+            if (a.isDiscovering) a.cancelDiscovery()
+            if (h == null) {
+                pendingConnect = address
+                appContext?.let { start(it) }
+                return
+            }
+            if (device.bondState != BluetoothDevice.BOND_BONDED) {
+                pendingConnect = address
+                state = "connecting"
+                message = "Pairing with ${safeName(device)}… accept the pairing request on the TV and phone."
+                device.createBond()
+                return
+            }
+            state = "connecting"
+            message = "Connecting to ${safeName(device)}…"
+            if (!h.connect(device)) {
+                state = "ready"
+                message = "${safeName(device)} didn't accept the connection. On the TX3 open Bluetooth settings, then tap it again."
+            }
+        } catch (e: Exception) {
+            state = "error"
+            message = "Bluetooth error: ${e.message}"
+        }
+    }
+
+    fun disconnect() {
+        try { host?.let { hid?.disconnect(it) } } catch (_: Exception) {}
+    }
+
+    /** Makes the phone visible so it can be added from the TV's Bluetooth settings. */
+    fun discoverableIntent(): Intent =
+        Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 180)
+
+    fun enableIntent(): Intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+
+    /** Searches for nearby Bluetooth devices (the TX3 must have its Bluetooth settings open). */
+    fun scan() {
+        val a = adapter ?: return
+        try {
+            refreshDevices()
+            if (a.isDiscovering) a.cancelDiscovery()
+            scanning = a.startDiscovery()
+            if (scanning) message = "Searching… keep the TX3's Bluetooth settings screen open."
+        } catch (e: Exception) {
+            message = "Can't search: ${e.message}"
+        }
+    }
+
+    private fun refreshDevices() {
+        val a = adapter ?: return
+        try {
+            val bonded = a.bondedDevices.orEmpty().map { toBtDevice(it) }
+            val keepFound = devices.filter { d -> !d.bonded && bonded.none { it.address == d.address } }
+            devices.clear()
+            devices.addAll((bonded + keepFound).sortedWith(compareByDescending<BtDevice> { it.likelyTv }.thenByDescending { it.bonded }))
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun toBtDevice(d: BluetoothDevice): BtDevice {
+        val name = safeName(d)
+        val major = try { d.bluetoothClass?.majorDeviceClass } catch (_: Exception) { null }
+        val tvish = major == BluetoothClass.Device.Major.AUDIO_VIDEO ||
+            listOf("tx3", "tanix", "tv", "box", "android", "amlogic").any { name.lowercase().contains(it) }
+        val isPhoneOrAudio = major == BluetoothClass.Device.Major.PHONE ||
+            (major == BluetoothClass.Device.Major.AUDIO_VIDEO && listOf("bud", "head", "ear", "speaker").any { name.lowercase().contains(it) })
+        return BtDevice(d.address, name, d.bondState == BluetoothDevice.BOND_BONDED, tvish && !isPhoneOrAudio)
+    }
+
+    private fun safeName(d: BluetoothDevice): String = try {
+        d.name?.takeIf { it.isNotBlank() } ?: d.address
+    } catch (_: Exception) {
+        d.address
+    }
+
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    @Suppress("DEPRECATION")
+                    val d: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
+                    val bd = toBtDevice(d)
+                    if (devices.none { it.address == bd.address } && !bd.name.equals(bd.address)) {
+                        if (bd.likelyTv) devices.add(0, bd) else devices.add(bd)
+                    }
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    scanning = false
+                    if (state != "connected") message = if (devices.isEmpty())
+                        "Nothing found. On the TX3 open Settings → Bluetooth (or Remotes & Accessories) and search again."
+                    else "Tap your TX3 in the list."
+                }
+                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                    @Suppress("DEPRECATION")
+                    val d: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
+                    val bond = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
+                    refreshDevices()
+                    if (bond == BluetoothDevice.BOND_BONDED && pendingConnect == d.address) {
+                        pendingConnect = null
+                        connect(d.address)
+                    } else if (bond == BluetoothDevice.BOND_NONE && pendingConnect == d.address) {
+                        pendingConnect = null
+                        state = "ready"
+                        message = "Pairing was cancelled. Try again, or pair from the TX3's Bluetooth settings."
+                    }
+                }
+                BluetoothAdapter.ACTION_STATE_CHANGED -> {
+                    val s = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF)
+                    if (s == BluetoothAdapter.STATE_ON && state == "off") appContext?.let { start(it) }
+                    if (s == BluetoothAdapter.STATE_OFF) {
+                        hid = null
+                        host = null
+                        started = false
+                        connectedName = ""
+                        state = "off"
+                        message = "Bluetooth is off."
+                    }
+                }
+            }
+        }
+    }
+
+    private fun registerReceiver(ctx: Context) {
+        if (receiverRegistered) return
+        val filter = IntentFilter().apply {
+            addAction(BluetoothDevice.ACTION_FOUND)
+            addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+            addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+        }
+        if (Build.VERSION.SDK_INT >= 33) ctx.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+        else ctx.registerReceiver(receiver, filter)
+        receiverRegistered = true
+    }
+
+    // ---------------- sending ----------------
+
+    /** Sends Android key codes as Bluetooth keyboard / consumer-control presses. */
+    fun sendKeys(codes: IntArray) {
+        if (!isConnected) {
+            message = "Not connected — tap your TX3 below first."
+            return
+        }
+        sender.execute {
+            for (code in codes) {
+                val kb = KEYBOARD_MAP[code]
+                val cc = CONSUMER_MAP[code]
+                when {
+                    kb != null -> tapKeyboard(0, kb)
+                    cc != null -> tapConsumer(cc)
+                }
+            }
+        }
+    }
+
+    /** Types ASCII text using a US keyboard layout. */
+    fun typeText(text: String, pressEnter: Boolean) {
+        if (!isConnected) {
+            message = "Not connected — tap your TX3 below first."
+            return
+        }
+        sender.execute {
+            for (ch in text) {
+                val (mod, usage) = charToUsage(ch) ?: continue
+                tapKeyboard(mod, usage)
+            }
+            if (pressEnter) tapKeyboard(0, 0x28)
+        }
+    }
+
+    private fun tapKeyboard(modifier: Int, usage: Int) {
+        val h = hid ?: return
+        val d = host ?: return
+        try {
+            h.sendReport(d, REPORT_KEYBOARD, byteArrayOf(modifier.toByte(), 0, usage.toByte(), 0, 0, 0, 0, 0))
+            Thread.sleep(15)
+            h.sendReport(d, REPORT_KEYBOARD, ByteArray(8))
+            Thread.sleep(15)
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun tapConsumer(usage: Int) {
+        val h = hid ?: return
+        val d = host ?: return
+        try {
+            h.sendReport(d, REPORT_CONSUMER, byteArrayOf((usage and 0xFF).toByte(), ((usage shr 8) and 0xFF).toByte()))
+            Thread.sleep(15)
+            h.sendReport(d, REPORT_CONSUMER, ByteArray(2))
+            Thread.sleep(15)
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun charToUsage(c: Char): Pair<Int, Int>? {
+        return when (c) {
+            in 'a'..'z' -> 0 to (0x04 + (c - 'a'))
+            in 'A'..'Z' -> MOD_SHIFT to (0x04 + (c - 'A'))
+            in '1'..'9' -> 0 to (0x1E + (c - '1'))
+            '0' -> 0 to 0x27
+            ' ' -> 0 to 0x2C
+            '\n' -> 0 to 0x28
+            '!' -> MOD_SHIFT to 0x1E
+            '@' -> MOD_SHIFT to 0x1F
+            '#' -> MOD_SHIFT to 0x20
+            '$' -> MOD_SHIFT to 0x21
+            '%' -> MOD_SHIFT to 0x22
+            '^' -> MOD_SHIFT to 0x23
+            '&' -> MOD_SHIFT to 0x24
+            '*' -> MOD_SHIFT to 0x25
+            '(' -> MOD_SHIFT to 0x26
+            ')' -> MOD_SHIFT to 0x27
+            '-' -> 0 to 0x2D
+            '_' -> MOD_SHIFT to 0x2D
+            '=' -> 0 to 0x2E
+            '+' -> MOD_SHIFT to 0x2E
+            '[' -> 0 to 0x2F
+            '{' -> MOD_SHIFT to 0x2F
+            ']' -> 0 to 0x30
+            '}' -> MOD_SHIFT to 0x30
+            '\\' -> 0 to 0x31
+            '|' -> MOD_SHIFT to 0x31
+            ';' -> 0 to 0x33
+            ':' -> MOD_SHIFT to 0x33
+            '\'' -> 0 to 0x34
+            '"' -> MOD_SHIFT to 0x34
+            '`' -> 0 to 0x35
+            '~' -> MOD_SHIFT to 0x35
+            ',' -> 0 to 0x36
+            '<' -> MOD_SHIFT to 0x36
+            '.' -> 0 to 0x37
+            '>' -> MOD_SHIFT to 0x37
+            '/' -> 0 to 0x38
+            '?' -> MOD_SHIFT to 0x38
+            else -> null
+        }
+    }
+
+    private fun ui(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) block() else main.post(block)
+    }
+}
+EOF
+
 cat << 'EOF' > app/src/main/java/com/example/lancast/DeviceRemote.kt
 package com.example.lancast
 
@@ -3149,6 +3855,7 @@ import java.util.concurrent.TimeUnit
 object DeviceRemote {
     const val MODE_VDO = "vdo"
     const val MODE_DEVICE = "device"
+    const val MODE_BT = "bt"
     const val ADB_PORT = 5555
 
     // Android KeyEvent codes
@@ -3166,6 +3873,7 @@ object DeviceRemote {
     const val KEY_ENTER = 66
     const val KEY_DEL = 67
     const val KEY_MENU = 82
+    const val KEY_SEARCH = 84
     const val KEY_MEDIA_PLAY_PAUSE = 85
     const val KEY_MEDIA_REWIND = 89
     const val KEY_MEDIA_FAST_FORWARD = 90
@@ -3190,8 +3898,10 @@ object DeviceRemote {
     /** A device seen on the LAN. [adbOpen] = its debugging port answers, so it can be controlled. */
     data class FoundDevice(val ip: String, val name: String, val adbOpen: Boolean)
 
-    val isDeviceMode: Boolean get() = mode == MODE_DEVICE
-    val isConnected: Boolean get() = status == "connected"
+    /** True for both direct modes (Wi-Fi ADB and Bluetooth): buttons send real Android keys. */
+    val isDeviceMode: Boolean get() = mode == MODE_DEVICE || mode == MODE_BT
+    val isBluetoothMode: Boolean get() = mode == MODE_BT
+    val isConnected: Boolean get() = if (isBluetoothMode) BtRemote.isConnected else status == "connected"
 
     private val executor = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
@@ -3210,7 +3920,8 @@ object DeviceRemote {
         appContext = context.applicationContext
         mode = p.getString("mode", MODE_VDO) ?: MODE_VDO
         host = p.getString("host", "") ?: ""
-        if (isDeviceMode) autoConnect()
+        if (mode == MODE_BT) BtRemote.start(context)
+        else if (mode == MODE_DEVICE) autoConnect()
     }
 
     /** Reconnects to the remembered box, or searches the network when there is none / it moved. */
@@ -3219,8 +3930,10 @@ object DeviceRemote {
     }
 
     fun changeMode(newMode: String) {
+        if (mode == MODE_BT && newMode != MODE_BT) BtRemote.stop()
         mode = newMode
         prefs?.edit()?.putString("mode", newMode)?.apply()
+        if (newMode == MODE_BT) appContext?.let { BtRemote.start(it) }
         if (newMode == MODE_DEVICE && !scanning && status != "connected" && status != "connecting" && status != "auth") {
             autoConnect()
         }
@@ -3259,6 +3972,10 @@ object DeviceRemote {
     /** Sends one or more Android key codes to the box. */
     fun key(vararg codes: Int) {
         if (codes.isEmpty()) return
+        if (isBluetoothMode) {
+            BtRemote.sendKeys(codes)
+            return
+        }
         shell("input keyevent " + codes.joinToString(" "))
     }
 
@@ -3266,6 +3983,10 @@ object DeviceRemote {
     fun text(value: String, pressEnter: Boolean = false) {
         val clean = value.replace("\n", " ").replace("\r", " ").filter { it.code in 32..126 }
         if (clean.isBlank()) return
+        if (isBluetoothMode) {
+            BtRemote.typeText(clean, pressEnter)
+            return
+        }
         val escaped = clean.replace(" ", "%s").replace("'", "'\\''")
         shell("input text '$escaped'")
         if (pressEnter) key(KEY_ENTER)
@@ -3584,8 +4305,8 @@ android {
         applicationId = "com.example.lancasttv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 3
+        versionName = "2.1"
     }
     signingConfigs {
         create("release") {
@@ -4782,7 +5503,13 @@ class VdoRemoteImeService : InputMethodService() {
 }
 EOF
 
-# Generate release keystore if not exists
+# Use the fixed, committed signing key so every build can update the installed app
+# (a new random key per build forces uninstalling first). VDO_KEYSTORE_B64 overrides it.
+if [ -n "$VDO_KEYSTORE_B64" ]; then
+    echo "$VDO_KEYSTORE_B64" | base64 -d > release.keystore
+elif [ -f signing/vdo-release.keystore ]; then
+    cp signing/vdo-release.keystore release.keystore
+fi
 if [ ! -f release.keystore ]; then
     keytool -genkeypair -v -keystore release.keystore -alias vdocast -keyalg RSA -keysize 2048 -validity 10000 -storepass vdocast -keypass vdocast -dname "CN=VDOCast, O=VDOCast, C=US"
 fi

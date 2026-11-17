@@ -10,6 +10,11 @@ This repo has no checked-in Android source. `build.sh` is the single source of t
 - Heredocs are quoted (`'EOF'`), so `$` in Kotlin string templates (e.g. `"http://$host:$port/tv"`) is literal and must stay that way; don't switch to unquoted `EOF`.
 - If you add a new source file or resource directory, also add its `mkdir -p` (if it's in a new directory) and its own heredoc block.
 
+## Versioning & signing (required for in-place app updates)
+
+- On every change that ships, bump the **minor** version in both module `build.gradle.kts` heredocs: `versionName` `2.N` → `2.(N+1)` and `versionCode` +1. Keep `:app` and `:tv` in step.
+- Builds are signed with the committed key `signing/vdo-release.keystore` (alias/passwords `vdocast`), so a new APK installs over the old one. Never regenerate or replace it: a different key forces users to uninstall first. A `VDO_KEYSTORE_B64` secret/env var, if set, overrides it.
+
 ## Build
 
 ```bash
@@ -46,6 +51,7 @@ Two Android apps in one Gradle project (`rootProject.name = "VDOCastSuite"`):
   - Network info modal showing phone's Wi-Fi IP and direct connect guidance.
   - Haptic feedback on all remote button taps and gesture swipes.
 - **Direct Device Remote (`AdbClient.kt`, `DeviceRemote.kt`)**: `VDO TV App` / `TX3 Direct` toggle on the Remote tab. In TX3 Direct mode the phone talks ADB-over-Wi-Fi (port 5555, RSA key stored in `filesDir/adbkey`) straight to the TV box, so no app is needed on the TV. Buttons become `input keyevent` (D-pad 19–23, Home 3, Back 4, Menu 82, Power 26, Vol 24/25, Mute 164, Play/Pause 85, FF/REW 90/89), and the keyboard/voice use `input text`. Supports manual IP or a /24 scan for open port 5555. One-time setup on the box: enable USB debugging, then accept the "Allow USB debugging?" prompt.
+- **Bluetooth Remote (`BtRemote.kt`)**: third mode on the Remote tab. The phone registers as a Bluetooth HID keyboard + consumer-control remote (`BluetoothHidDevice`, phone Android 9+), so the TV box pairs with it like a keyboard; no debugging or app on the box. Report 1 = keyboard (arrows, Enter=OK, Backspace, End, typing with a US layout), report 2 = consumer usages (AC Home 0x223, AC Back 0x224, Menu 0x40, Power 0x30, volume/mute, play/pause, FF/REW, AC Search). `DeviceRemote.key()/text()` dispatch to it when `mode == "bt"`. Remembers the last host and reconnects automatically.
 - **Service (`CastServerService.kt`)**:
   - Starts as a foreground media playback service with notification transport controls (Play/Pause, Rewind, FastForward, Stop).
   - Keeps Wi-Fi MulticastLock and WakeLock so casting never drops when screen turns off.
