@@ -997,6 +997,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// ==================== GOOGLE TV SOFT COLOR SYSTEM ====================
+val GtvBackground = Color(0xFF0F131C)        // Deep warm charcoal slate
+val GtvSurface = Color(0xFF181D2A)           // Primary card container
+val GtvSurfaceVariant = Color(0xFF202738)    // Secondary elevated container
+val GtvBorder = Color(0xFF283248)            // Subtle borders & divider lines
+val GtvPrimary = Color(0xFF8AB4F8)           // Google TV periwinkle blue
+val GtvOnPrimary = Color(0xFF0A1329)         // High contrast text/icon on primary
+val GtvSecondary = Color(0xFFA8C7FA)         // Soft secondary blue
+val GtvTextPrimary = Color(0xFFF1F5F9)       // Main title text
+val GtvTextSecondary = Color(0xFF94A3B8)     // Muted labels & timecodes
+val GtvTextTertiary = Color(0xFF64748B)      // Inactive icons & subtle hints
+val GtvSuccess = Color(0xFF34D399)           // Connected indicator green
+val GtvWarning = Color(0xFFFBBF24)           // Buffering / amber
+val GtvError = Color(0xFFF87171)             // Muted coral red
+
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -1034,16 +1049,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val luxuryDarkScheme = darkColorScheme(
-                primary = Color(0xFF00E5FF),
-                onPrimary = Color(0xFF060913),
-                primaryContainer = Color(0xFF131D31),
-                onPrimaryContainer = Color(0xFF38BDF8),
-                secondary = Color(0xFF818CF8),
-                background = Color(0xFF060913),
-                surface = Color(0xFF0E1424),
-                onSurface = Color(0xFFF8FAFC),
-                surfaceVariant = Color(0xFF152037),
-                onSurfaceVariant = Color(0xFF94A3B8)
+                primary = GtvPrimary,
+                onPrimary = GtvOnPrimary,
+                primaryContainer = GtvSurfaceVariant,
+                onPrimaryContainer = GtvSecondary,
+                secondary = GtvSecondary,
+                background = GtvBackground,
+                surface = GtvSurface,
+                onSurface = GtvTextPrimary,
+                surfaceVariant = GtvSurfaceVariant,
+                onSurfaceVariant = GtvTextSecondary
             )
 
             MaterialTheme(colorScheme = luxuryDarkScheme) {
@@ -1143,8 +1158,8 @@ fun VdoMainScreen(initialUri: Uri?) {
                     Text("Phone Wi-Fi IP: ${getLocalWifiIp(context)}:5050", fontWeight = FontWeight.SemiBold)
                     Text("Receiver: VDO TV")
                     Text("Connection: ${if (isConnected) "Live Synced with TV" else "Standby (Waiting for TV)"}")
-                    Divider(color = Color(0xFF1E293B))
-                    Text("Ensure your TV or Android TV box is open on VDO TV and connected to the same Wi-Fi network.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
+                    Divider(color = GtvBorder)
+                    Text("Ensure your TV or Android TV box is open on VDO TV and connected to the same Wi-Fi network.", style = MaterialTheme.typography.bodySmall, color = GtvTextSecondary)
                 }
             },
             confirmButton = {
@@ -1168,7 +1183,7 @@ fun VdoMainScreen(initialUri: Uri?) {
         },
         bottomBar = {
             NavigationBar(
-                containerColor = Color(0xFF090D18),
+                containerColor = GtvBackground,
                 tonalElevation = 8.dp,
                 modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             ) {
@@ -1181,11 +1196,11 @@ fun VdoMainScreen(initialUri: Uri?) {
                     icon = { Icon(Icons.Default.PlayCircle, contentDescription = "Player", modifier = Modifier.size(24.dp)) },
                     label = { Text("Player", fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF060913),
-                        selectedTextColor = Color(0xFF00E5FF),
-                        indicatorColor = Color(0xFF00E5FF),
-                        unselectedIconColor = Color(0xFF64748B),
-                        unselectedTextColor = Color(0xFF64748B)
+                        selectedIconColor = GtvOnPrimary,
+                        selectedTextColor = GtvPrimary,
+                        indicatorColor = GtvPrimary,
+                        unselectedIconColor = GtvTextTertiary,
+                        unselectedTextColor = GtvTextTertiary
                     )
                 )
                 NavigationBarItem(
@@ -1197,11 +1212,11 @@ fun VdoMainScreen(initialUri: Uri?) {
                     icon = { Icon(Icons.Default.SettingsRemote, contentDescription = "TV Remote", modifier = Modifier.size(24.dp)) },
                     label = { Text("TV Remote", fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF060913),
-                        selectedTextColor = Color(0xFF00E5FF),
-                        indicatorColor = Color(0xFF00E5FF),
-                        unselectedIconColor = Color(0xFF64748B),
-                        unselectedTextColor = Color(0xFF64748B)
+                        selectedIconColor = GtvOnPrimary,
+                        selectedTextColor = GtvPrimary,
+                        indicatorColor = GtvPrimary,
+                        unselectedIconColor = GtvTextTertiary,
+                        unselectedTextColor = GtvTextTertiary
                     )
                 )
             }
@@ -1247,13 +1262,13 @@ fun ModernTopAppBar(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(Color(0xFF00E5FF), Color(0xFF3B82F6)))),
+                    .background(Brush.linearGradient(listOf(GtvPrimary, Color(0xFF4285F4)))),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     if (selectedTab == 0) Icons.Default.PlayCircle else Icons.Default.SettingsRemote,
                     contentDescription = null,
-                    tint = Color.Black,
+                    tint = GtvOnPrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -1271,8 +1286,8 @@ fun ModernTopAppBar(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isConnected) Color(0xFF22C55E).copy(alpha = 0.15f) else Color(0xFF1E293B),
-                border = BorderStroke(1.dp, if (isConnected) Color(0xFF22C55E).copy(alpha = 0.4f) else Color(0xFF334155)),
+                color = if (isConnected) GtvSuccess.copy(alpha = 0.15f) else GtvBorder,
+                border = BorderStroke(1.dp, if (isConnected) GtvSuccess.copy(alpha = 0.4f) else GtvBorder),
                 modifier = Modifier.clickable { onInfoClick() }
             ) {
                 Row(
@@ -1284,13 +1299,13 @@ fun ModernTopAppBar(
                         modifier = Modifier
                             .size(7.dp)
                             .clip(CircleShape)
-                            .background(if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF))
+                            .background(if (isConnected) GtvSuccess else GtvPrimary)
                     )
                     Text(
                         if (isConnected) "VDO TV" else "Wi-Fi Ready",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF)
+                        color = if (isConnected) GtvSuccess else GtvPrimary
                     )
                 }
             }
@@ -1299,8 +1314,8 @@ fun ModernTopAppBar(
                 onClick = onStandbyClick,
                 modifier = Modifier.size(36.dp),
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = Color(0xFF1E293B),
-                    contentColor = Color(0xFFEF4444)
+                    containerColor = GtvBorder,
+                    contentColor = GtvError
                 )
             ) {
                 Icon(Icons.Default.PowerSettingsNew, contentDescription = "TV Standby", modifier = Modifier.size(18.dp))
@@ -1355,13 +1370,13 @@ fun PlayerScreen(
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Icon(Icons.Default.VideoLibrary, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.VideoLibrary, contentDescription = null, tint = GtvOnPrimary, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
             Text(
                 if (selectedUri == null) "Select Video to Cast" else "Change Video",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color.Black
+                color = GtvOnPrimary
             )
         }
 
@@ -1384,8 +1399,8 @@ fun NowPlayingCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
-        border = BorderStroke(1.dp, Color(0xFF1E293B)),
+        colors = CardDefaults.cardColors(containerColor = GtvSurface),
+        border = BorderStroke(1.dp, GtvBorder),
         shape = RoundedCornerShape(22.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1412,10 +1427,10 @@ fun NowPlayingCard(
                 Surface(
                     shape = RoundedCornerShape(10.dp),
                     color = when (status) {
-                        "playing" -> Color(0xFF00E5FF).copy(alpha = 0.15f)
-                        "paused" -> Color(0xFFF59E0B).copy(alpha = 0.15f)
-                        "buffering" -> Color(0xFF8B5CF6).copy(alpha = 0.15f)
-                        else -> Color(0xFF1E293B)
+                        "playing" -> GtvPrimary.copy(alpha = 0.15f)
+                        "paused" -> GtvWarning.copy(alpha = 0.15f)
+                        "buffering" -> GtvSecondary.copy(alpha = 0.15f)
+                        else -> GtvBorder
                     }
                 ) {
                     Text(
@@ -1424,10 +1439,10 @@ fun NowPlayingCard(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = when (status) {
-                            "playing" -> Color(0xFF00E5FF)
-                            "paused" -> Color(0xFFF59E0B)
-                            "buffering" -> Color(0xFF8B5CF6)
-                            else -> Color(0xFF64748B)
+                            "playing" -> GtvPrimary
+                            "paused" -> GtvWarning
+                            "buffering" -> GtvSecondary
+                            else -> GtvTextTertiary
                         }
                     )
                 }
@@ -1446,18 +1461,18 @@ fun NowPlayingCard(
                 valueRange = 0f..maxDuration,
                 enabled = duration > 0,
                 colors = SliderDefaults.colors(
-                    thumbColor = Color(0xFF00E5FF),
-                    activeTrackColor = Color(0xFF00E5FF),
-                    inactiveTrackColor = Color(0xFF1E293B)
+                    thumbColor = GtvPrimary,
+                    activeTrackColor = GtvPrimary,
+                    inactiveTrackColor = GtvBorder
                 )
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatTime(effectiveTime), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                Text(formatTime(effectiveTime), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = GtvPrimary)
                 if (duration > 0) {
-                    Text("-${formatTime(duration - effectiveTime)}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF64748B))
+                    Text("-${formatTime(duration - effectiveTime)}", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary)
                 }
-                Text(formatTime(duration), style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
+                Text(formatTime(duration), style = MaterialTheme.typography.labelMedium, color = GtvTextSecondary)
             }
         }
     }
@@ -1478,7 +1493,7 @@ fun HeroTransportRow(
             onClick = { onSeek(-30.0) },
             modifier = Modifier.size(50.dp),
             shape = CircleShape,
-            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF111827), contentColor = Color(0xFF94A3B8))
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = GtvSurfaceVariant, contentColor = GtvTextSecondary)
         ) {
             Icon(Icons.Default.Replay30, "-30s", modifier = Modifier.size(24.dp))
         }
@@ -1487,7 +1502,7 @@ fun HeroTransportRow(
             onClick = { onSeek(-10.0) },
             modifier = Modifier.size(54.dp),
             shape = CircleShape,
-            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF152037), contentColor = Color(0xFF00E5FF))
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = GtvSurfaceVariant, contentColor = GtvPrimary)
         ) {
             Icon(Icons.Default.Replay10, "-10s", modifier = Modifier.size(26.dp))
         }
@@ -1496,12 +1511,12 @@ fun HeroTransportRow(
             onClick = onToggle,
             modifier = Modifier.size(74.dp),
             shape = CircleShape,
-            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
+            colors = IconButtonDefaults.filledIconButtonColors(containerColor = GtvPrimary)
         ) {
             Icon(
                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                 contentDescription = "Play/Pause",
-                tint = Color.Black,
+                tint = GtvOnPrimary,
                 modifier = Modifier.size(40.dp)
             )
         }
@@ -1510,7 +1525,7 @@ fun HeroTransportRow(
             onClick = { onSeek(10.0) },
             modifier = Modifier.size(54.dp),
             shape = CircleShape,
-            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF152037), contentColor = Color(0xFF00E5FF))
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = GtvSurfaceVariant, contentColor = GtvPrimary)
         ) {
             Icon(Icons.Default.Forward10, "+10s", modifier = Modifier.size(26.dp))
         }
@@ -1519,7 +1534,7 @@ fun HeroTransportRow(
             onClick = { onSeek(30.0) },
             modifier = Modifier.size(50.dp),
             shape = CircleShape,
-            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF111827), contentColor = Color(0xFF94A3B8))
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = GtvSurfaceVariant, contentColor = GtvTextSecondary)
         ) {
             Icon(Icons.Default.Forward30, "+30s", modifier = Modifier.size(24.dp))
         }
@@ -1532,8 +1547,8 @@ fun VolumeCapsuleCard(volume: Float, isMuted: Boolean) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
-        border = BorderStroke(1.dp, Color(0xFF1E293B)),
+        colors = CardDefaults.cardColors(containerColor = GtvSurface),
+        border = BorderStroke(1.dp, GtvBorder),
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
@@ -1547,7 +1562,7 @@ fun VolumeCapsuleCard(volume: Float, isMuted: Boolean) {
                     if (isMuted) "MUTED" else "${(volume * 100).toInt()}%",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF)
+                    color = if (isMuted) GtvError else GtvPrimary
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -1563,7 +1578,7 @@ fun VolumeCapsuleCard(volume: Float, isMuted: Boolean) {
                     Icon(
                         if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
                         contentDescription = "Mute",
-                        tint = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF)
+                        tint = if (isMuted) GtvError else GtvPrimary
                     )
                 }
                 Slider(
@@ -1572,9 +1587,9 @@ fun VolumeCapsuleCard(volume: Float, isMuted: Boolean) {
                     valueRange = 0f..1f,
                     modifier = Modifier.weight(1f),
                     colors = SliderDefaults.colors(
-                        thumbColor = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF),
-                        activeTrackColor = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF),
-                        inactiveTrackColor = Color(0xFF1E293B)
+                        thumbColor = if (isMuted) GtvError else GtvPrimary,
+                        activeTrackColor = if (isMuted) GtvError else GtvPrimary,
+                        inactiveTrackColor = GtvBorder
                     )
                 )
             }
@@ -1588,13 +1603,13 @@ fun QuickModifiersCard(currentSpeed: Float, currentAspect: String) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
-        border = BorderStroke(1.dp, Color(0xFF1E293B)),
+        colors = CardDefaults.cardColors(containerColor = GtvSurface),
+        border = BorderStroke(1.dp, GtvBorder),
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Column {
-                Text("Playback Speed", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
+                Text("Playback Speed", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = GtvTextSecondary)
                 Spacer(Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val speeds = listOf(0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
@@ -1614,7 +1629,7 @@ fun QuickModifiersCard(currentSpeed: Float, currentAspect: String) {
             }
 
             Column {
-                Text("Screen Aspect Ratio", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
+                Text("Screen Aspect Ratio", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = GtvTextSecondary)
                 Spacer(Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val aspects = listOf("contain" to "Fit", "cover" to "Fill", "fill" to "Stretch")
@@ -1652,7 +1667,7 @@ fun RemoteScreen(
             onDismissRequest = { showKeyboardDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.Keyboard, contentDescription = null, tint = Color(0xFF00E5FF))
+                    Icon(Icons.Default.Keyboard, contentDescription = null, tint = GtvPrimary)
                     Text("Type on TV", fontWeight = FontWeight.Bold)
                 }
             },
@@ -1661,7 +1676,7 @@ fun RemoteScreen(
                     Text(
                         "Type movie title, search query, or paste link to send to your TV:",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF94A3B8)
+                        color = GtvTextSecondary
                     )
 
                     OutlinedTextField(
@@ -1678,9 +1693,9 @@ fun RemoteScreen(
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF00E5FF),
-                            unfocusedBorderColor = Color(0xFF334155),
-                            cursorColor = Color(0xFF00E5FF)
+                            focusedBorderColor = GtvPrimary,
+                            unfocusedBorderColor = GtvBorder,
+                            cursorColor = GtvPrimary
                         )
                     )
 
@@ -1734,12 +1749,12 @@ fun RemoteScreen(
                             showKeyboardDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+                    colors = ButtonDefaults.buttonColors(containerColor = GtvPrimary),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Search, contentDescription = null, tint = GtvOnPrimary, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Send & Search", fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text("Send & Search", fontWeight = FontWeight.Bold, color = GtvOnPrimary)
                 }
             },
             dismissButton = {
@@ -1751,7 +1766,7 @@ fun RemoteScreen(
                         }
                     }
                 ) {
-                    Text("Type Only", color = Color(0xFF00E5FF))
+                    Text("Type Only", color = GtvPrimary)
                 }
             }
         )
@@ -1768,8 +1783,8 @@ fun RemoteScreen(
         // TV Live Status Feedback Strip
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = Color(0xFF0E1424),
-            border = BorderStroke(1.dp, Color(0xFF1E293B)),
+            color = GtvSurface,
+            border = BorderStroke(1.dp, GtvBorder),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -1782,19 +1797,19 @@ fun RemoteScreen(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF))
+                            .background(if (isConnected) GtvSuccess else GtvPrimary)
                     )
                     Text(
                         if (isConnected) "VDO TV • LIVE SYNC" else "TV STANDBY",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF)
+                        color = if (isConnected) GtvSuccess else GtvPrimary
                     )
                 }
                 Text(
                     if (tvStatus.duration > 0) "${formatTime(tvStatus.currentTime)} / ${formatTime(tvStatus.duration)}" else "Ready",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF94A3B8)
+                    color = GtvTextSecondary
                 )
             }
         }
@@ -1813,8 +1828,8 @@ fun RemoteScreen(
                 modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = Color(0xFF200F17),
-                    contentColor = Color(0xFFEF4444)
+                    containerColor = GtvError.copy(alpha = 0.15f),
+                    contentColor = GtvError
                 )
             ) {
                 Icon(Icons.Default.PowerSettingsNew, contentDescription = "TV Power", modifier = Modifier.size(24.dp))
@@ -1828,8 +1843,8 @@ fun RemoteScreen(
                 modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = Color(0xFF131D31),
-                    contentColor = Color(0xFF00E5FF)
+                    containerColor = GtvSurfaceVariant,
+                    contentColor = GtvPrimary
                 )
             ) {
                 Icon(Icons.Default.Menu, contentDescription = "TV Menu OSD", modifier = Modifier.size(24.dp))
@@ -1843,8 +1858,8 @@ fun RemoteScreen(
                 modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = Color(0xFF131D31),
-                    contentColor = Color(0xFF38BDF8)
+                    containerColor = GtvSurfaceVariant,
+                    contentColor = GtvSecondary
                 )
             ) {
                 Icon(Icons.Default.Keyboard, contentDescription = "Type on TV", modifier = Modifier.size(24.dp))
@@ -1858,8 +1873,8 @@ fun RemoteScreen(
                 modifier = Modifier.size(50.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = Color(0xFF131D31),
-                    contentColor = if (tvStatus.muted) Color(0xFFEF4444) else Color(0xFFF59E0B)
+                    containerColor = GtvSurfaceVariant,
+                    contentColor = if (tvStatus.muted) GtvError else GtvWarning
                 )
             ) {
                 Icon(
@@ -1905,7 +1920,7 @@ fun RemoteScreen(
                     CastServerService.pushCommand("stop")
                 },
                 shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, Color(0xFF334155)),
+                border = BorderStroke(1.dp, GtvBorder),
                 modifier = Modifier.height(46.dp)
             ) {
                 Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -1920,12 +1935,12 @@ fun RemoteScreen(
                 },
                 modifier = Modifier.size(56.dp),
                 shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = GtvPrimary)
             ) {
                 Icon(
                     if (tvStatus.status == "playing") Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = "Play/Pause",
-                    tint = Color.Black,
+                    tint = GtvOnPrimary,
                     modifier = Modifier.size(30.dp)
                 )
             }
@@ -1941,7 +1956,7 @@ fun RemoteScreen(
                     CastServerService.pushCommand("setAspect", 0.0, nextAspect)
                 },
                 shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, Color(0xFF334155)),
+                border = BorderStroke(1.dp, GtvBorder),
                 modifier = Modifier.height(46.dp)
             ) {
                 Icon(Icons.Default.AspectRatio, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -1964,22 +1979,22 @@ fun TactileRemoteWheel(onCommand: (String) -> Unit) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
-        border = BorderStroke(1.dp, Color(0xFF1E293B)),
+        colors = CardDefaults.cardColors(containerColor = GtvSurface),
+        border = BorderStroke(1.dp, GtvBorder),
         shape = RoundedCornerShape(26.dp)
     ) {
         Column(
             modifier = Modifier.padding(22.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Directional Navigation Pad", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
+            Text("Directional Navigation Pad", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = GtvTextSecondary)
             Spacer(Modifier.height(14.dp))
 
             Box(
                 modifier = Modifier
                     .size(220.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF131D31)),
+                    .background(GtvSurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 // UP (+30s)
@@ -1987,7 +2002,7 @@ fun TactileRemoteWheel(onCommand: (String) -> Unit) {
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("up") },
                     modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(52.dp)
                 ) {
-                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", tint = GtvPrimary, modifier = Modifier.size(34.dp))
                 }
 
                 // LEFT (-10s)
@@ -1995,7 +2010,7 @@ fun TactileRemoteWheel(onCommand: (String) -> Unit) {
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("left") },
                     modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp).size(52.dp)
                 ) {
-                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Left", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Left", tint = GtvPrimary, modifier = Modifier.size(34.dp))
                 }
 
                 // CENTER OK DISC
@@ -2003,9 +2018,9 @@ fun TactileRemoteWheel(onCommand: (String) -> Unit) {
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("ok") },
                     modifier = Modifier.size(76.dp),
                     shape = CircleShape,
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = GtvPrimary)
                 ) {
-                    Text("OK", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = Color.Black)
+                    Text("OK", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = GtvOnPrimary)
                 }
 
                 // RIGHT (+10s)
@@ -2013,7 +2028,7 @@ fun TactileRemoteWheel(onCommand: (String) -> Unit) {
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("right") },
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(52.dp)
                 ) {
-                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Right", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Right", tint = GtvPrimary, modifier = Modifier.size(34.dp))
                 }
 
                 // DOWN (-30s)
@@ -2021,7 +2036,7 @@ fun TactileRemoteWheel(onCommand: (String) -> Unit) {
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("down") },
                     modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp).size(52.dp)
                 ) {
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", tint = GtvPrimary, modifier = Modifier.size(34.dp))
                 }
             }
         }
@@ -2045,8 +2060,8 @@ fun HardwareRockersRow(
         // Volume Rocker Capsule
         Card(
             shape = RoundedCornerShape(26.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
-            border = BorderStroke(1.dp, Color(0xFF1E293B)),
+            colors = CardDefaults.cardColors(containerColor = GtvSurface),
+            border = BorderStroke(1.dp, GtvBorder),
             modifier = Modifier.width(110.dp).height(160.dp)
         ) {
             Column(
@@ -2061,21 +2076,21 @@ fun HardwareRockersRow(
                     },
                     modifier = Modifier.size(44.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Vol +", tint = Color(0xFF00E5FF))
+                    Icon(Icons.Default.Add, contentDescription = "Vol +", tint = GtvPrimary)
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
                         contentDescription = null,
-                        tint = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF),
+                        tint = if (isMuted) GtvError else GtvPrimary,
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
                         if (isMuted) "MUTED" else "${(volume * 100).toInt()}%",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8)
+                        color = GtvTextSecondary
                     )
                 }
 
@@ -2086,7 +2101,7 @@ fun HardwareRockersRow(
                     },
                     modifier = Modifier.size(44.dp)
                 ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Vol -", tint = Color(0xFF00E5FF))
+                    Icon(Icons.Default.Remove, contentDescription = "Vol -", tint = GtvPrimary)
                 }
             }
         }
@@ -2094,8 +2109,8 @@ fun HardwareRockersRow(
         // Seek Rocker Capsule
         Card(
             shape = RoundedCornerShape(26.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
-            border = BorderStroke(1.dp, Color(0xFF1E293B)),
+            colors = CardDefaults.cardColors(containerColor = GtvSurface),
+            border = BorderStroke(1.dp, GtvBorder),
             modifier = Modifier.width(110.dp).height(160.dp)
         ) {
             Column(
@@ -2110,12 +2125,12 @@ fun HardwareRockersRow(
                     },
                     modifier = Modifier.size(44.dp)
                 ) {
-                    Icon(Icons.Default.FastForward, contentDescription = "FF 15s", tint = Color(0xFF818CF8))
+                    Icon(Icons.Default.FastForward, contentDescription = "FF 15s", tint = GtvSecondary)
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("SEEK", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF818CF8))
-                    Text("±15s", fontSize = 10.sp, color = Color(0xFF64748B))
+                    Text("SEEK", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GtvSecondary)
+                    Text("±15s", fontSize = 10.sp, color = GtvTextTertiary)
                 }
 
                 IconButton(
@@ -2125,7 +2140,7 @@ fun HardwareRockersRow(
                     },
                     modifier = Modifier.size(44.dp)
                 ) {
-                    Icon(Icons.Default.FastRewind, contentDescription = "Rew 15s", tint = Color(0xFF818CF8))
+                    Icon(Icons.Default.FastRewind, contentDescription = "Rew 15s", tint = GtvSecondary)
                 }
             }
         }
@@ -2627,13 +2642,13 @@ class TvReceiverActivity : Activity() {
         ambientContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#05070E"))
+            setBackgroundColor(Color.parseColor("#0F131C"))
             layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
 
         val brandLogo = TextView(this).apply {
             text = "VDO TV"
-            setTextColor(Color.parseColor("#00E5FF"))
+            setTextColor(Color.parseColor("#8AB4F8"))
             textSize = 34f
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
@@ -2661,7 +2676,7 @@ class TvReceiverActivity : Activity() {
 
         statusText = TextView(this).apply {
             text = "Searching for VDO Remote on Wi-Fi...\nMake sure your phone and TV box are on the same Wi-Fi network."
-            setTextColor(Color.parseColor("#38BDF8"))
+            setTextColor(Color.parseColor("#8AB4F8"))
             textSize = 16f
             gravity = Gravity.CENTER
             setPadding(40, 16, 40, 16)
@@ -2676,7 +2691,7 @@ class TvReceiverActivity : Activity() {
                 setMargins(40, 0, 40, 30)
             }
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#CC0B0F19"))
+                setColor(Color.parseColor("#E6141926"))
                 cornerRadius = 24f
             }
             setPadding(30, 20, 30, 20)
@@ -2697,7 +2712,7 @@ class TvReceiverActivity : Activity() {
             }
             max = 1000
             progressDrawable = GradientDrawable().apply {
-                setColor(Color.parseColor("#00E5FF"))
+                setColor(Color.parseColor("#8AB4F8"))
                 cornerRadius = 6f
             }
         }
@@ -2705,7 +2720,7 @@ class TvReceiverActivity : Activity() {
 
         osdTime = TextView(this).apply {
             text = "00:00 / 00:00"
-            setTextColor(Color.parseColor("#CBD5E1"))
+            setTextColor(Color.parseColor("#94A3B8"))
             textSize = 14f
         }
         osdContainer.addView(osdTime)
@@ -2715,9 +2730,9 @@ class TvReceiverActivity : Activity() {
         hudToast = TextView(this).apply {
             layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#E6090D18"))
+                setColor(Color.parseColor("#F0141926"))
                 cornerRadius = 28f
-                setStroke(2, Color.parseColor("#334155"))
+                setStroke(2, Color.parseColor("#283248"))
             }
             setPadding(40, 16, 40, 16)
             setTextColor(Color.WHITE)
@@ -2810,7 +2825,7 @@ class TvReceiverActivity : Activity() {
                             connected = true
                             runOnUiThread {
                                 statusText.text = "Connected to VDO Remote on Wi-Fi\nReady to Cast"
-                                statusText.setTextColor(Color.parseColor("#22C55E"))
+                                statusText.setTextColor(Color.parseColor("#34D399"))
                             }
                             startStatePolling()
                         }
@@ -2821,7 +2836,7 @@ class TvReceiverActivity : Activity() {
                 connected = false
                 runOnUiThread {
                     statusText.text = "Searching for VDO Remote on Wi-Fi...\nMake sure your phone and TV box are on the same Wi-Fi network."
-                    statusText.setTextColor(Color.parseColor("#38BDF8"))
+                    statusText.setTextColor(Color.parseColor("#8AB4F8"))
                 }
             }
             override fun onDiscoveryStopped(serviceType: String) {}
@@ -3147,13 +3162,13 @@ class VdoRemoteImeService : InputMethodService() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(android.graphics.Color.parseColor("#E605070E"))
+            setBackgroundColor(android.graphics.Color.parseColor("#E60F131C"))
             setPadding(32, 20, 32, 20)
         }
 
         infoView = TextView(this).apply {
             text = "⌨️ VDO Remote Keyboard • Type on phone or use TV remote"
-            setTextColor(android.graphics.Color.parseColor("#00E5FF"))
+            setTextColor(android.graphics.Color.parseColor("#8AB4F8"))
             textSize = 16f
             gravity = Gravity.CENTER
             setPadding(16, 12, 16, 12)

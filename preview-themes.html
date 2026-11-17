@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VDO Remote — Design & Color Studio</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col items-center">
+
+  <div class="max-w-4xl w-full">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-3">
+        ✨ Design & Color Exploration
+      </div>
+      <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">VDO Remote Theme Studio</h1>
+      <p class="text-slate-400 text-sm mt-1 max-w-lg mx-auto">
+        Choose a design aesthetic below to instantly preview the phone remote and media player in that style.
+      </p>
+    </div>
+
+    <!-- Theme Selector Tabs -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <!-- Theme 1 -->
+      <button onclick="selectTheme('apple')" id="btn-apple" class="theme-btn active p-3 rounded-xl border text-left transition-all bg-zinc-900 border-zinc-700 shadow-lg shadow-black/50">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-3 h-3 rounded-full bg-zinc-200"></span>
+          <span class="text-xs font-bold text-white">Apple Obsidian</span>
+        </div>
+        <p class="text-[11px] text-zinc-400 leading-tight">Matte black, frosted glass, refined warm silver.</p>
+      </button>
+
+      <!-- Theme 2 -->
+      <button onclick="selectTheme('googletv')" id="btn-googletv" class="theme-btn p-3 rounded-xl border text-left transition-all bg-slate-900/60 border-slate-800 hover:border-slate-700">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-3 h-3 rounded-full bg-blue-400"></span>
+          <span class="text-xs font-bold text-slate-200">Google TV Soft</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-tight">Muted velvet dark, periwinkle blue, soft pill cards.</p>
+      </button>
+
+      <!-- Theme 3 -->
+      <button onclick="selectTheme('cinema')" id="btn-cinema" class="theme-btn p-3 rounded-xl border text-left transition-all bg-slate-900/60 border-slate-800 hover:border-slate-700">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+          <span class="text-xs font-bold text-slate-200">Cinema Gold</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-tight">OLED pitch black, warm champagne gold, luxury feel.</p>
+      </button>
+
+      <!-- Theme 4 -->
+      <button onclick="selectTheme('nordic')" id="btn-nordic" class="theme-btn p-3 rounded-xl border text-left transition-all bg-slate-900/60 border-slate-800 hover:border-slate-700">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+          <span class="text-xs font-bold text-slate-200">Nordic Minimal</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-tight">Deep charcoal slate, sage emerald, clean micro-lines.</p>
+      </button>
+    </div>
+
+    <!-- Phone Mockup Container -->
+    <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+      
+      <!-- Phone Frame -->
+      <div id="phone-frame" class="w-[340px] rounded-[42px] p-3 shadow-2xl transition-all duration-300 border bg-zinc-950 border-zinc-800 shadow-black">
+        
+        <!-- Screen Interior -->
+        <div id="screen" class="w-full rounded-[34px] p-4 flex flex-col justify-between min-h-[640px] transition-colors duration-300 bg-black text-zinc-100">
+          
+          <!-- Top Bar -->
+          <div>
+            <div class="flex items-center justify-between pt-1 pb-3">
+              <div class="flex items-center gap-2">
+                <div id="app-badge" class="w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs bg-zinc-800 text-zinc-200">
+                  V
+                </div>
+                <span class="font-bold text-sm tracking-tight" id="app-name">VDO Remote</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="conn-pill" class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 bg-zinc-900 border border-zinc-800 text-zinc-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Synced
+                </span>
+                <button class="w-7 h-7 rounded-full flex items-center justify-center bg-zinc-900 text-zinc-400 text-xs">⌨️</button>
+              </div>
+            </div>
+
+            <!-- Tab Switcher (Player vs Remote) -->
+            <div id="tab-bar" class="grid grid-cols-2 p-1 rounded-2xl mb-4 bg-zinc-900 border border-zinc-800/80">
+              <button onclick="switchTab('player')" id="tab-player" class="py-1.5 text-xs font-bold rounded-xl transition-all bg-zinc-800 text-white shadow-sm">
+                Player
+              </button>
+              <button onclick="switchTab('remote')" id="tab-remote" class="py-1.5 text-xs font-semibold rounded-xl transition-all text-zinc-400 hover:text-white">
+                TV Remote
+              </button>
+            </div>
+          </div>
+
+          <!-- SCREEN VIEW 1: PLAYER SCREEN -->
+          <div id="view-player" class="flex-1 flex flex-col justify-between py-1">
+            <!-- Now Playing Card -->
+            <div id="now-playing-card" class="p-4 rounded-2xl border transition-all bg-zinc-900/90 border-zinc-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span id="status-chip" class="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  PLAYING
+                </span>
+                <span class="text-[11px] text-zinc-400 font-mono">1080p • AC-3</span>
+              </div>
+              <h3 id="video-title" class="font-bold text-sm text-zinc-100 truncate mb-1">Inception.2010.1080p.mkv</h3>
+              <p class="text-xs text-zinc-400 mb-3">VDO TV Cinema Receiver</p>
+              
+              <!-- Scrubber Bar -->
+              <div class="space-y-1.5">
+                <div class="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden relative">
+                  <div id="scrubber-fill" class="h-full rounded-full transition-all bg-zinc-200" style="width: 42%;"></div>
+                </div>
+                <div class="flex justify-between text-[10px] font-mono text-zinc-500">
+                  <span>42:15</span>
+                  <span>1:48:30</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Transport Cluster -->
+            <div class="flex items-center justify-center gap-4 my-3">
+              <button class="w-11 h-11 rounded-full flex items-center justify-center bg-zinc-900 text-zinc-300 hover:text-white active:scale-95 transition-all text-sm font-bold border border-zinc-800">
+                -10s
+              </button>
+              <button id="hero-play" class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shadow-xl active:scale-95 transition-all bg-zinc-100 text-black">
+                ▶
+              </button>
+              <button class="w-11 h-11 rounded-full flex items-center justify-center bg-zinc-900 text-zinc-300 hover:text-white active:scale-95 transition-all text-sm font-bold border border-zinc-800">
+                +10s
+              </button>
+            </div>
+
+            <!-- Volume Slider Card -->
+            <div id="volume-card" class="p-3.5 rounded-2xl border transition-all bg-zinc-900/70 border-zinc-800/80 flex items-center gap-3">
+              <span id="vol-icon" class="text-sm text-zinc-400">🔊</span>
+              <div class="flex-1">
+                <div class="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
+                  <div id="vol-fill" class="h-full rounded-full bg-zinc-200" style="width: 80%;"></div>
+                </div>
+              </div>
+              <span class="text-xs font-mono font-bold text-zinc-300">80%</span>
+            </div>
+
+            <!-- Action CTA -->
+            <button id="cta-button" class="w-full py-3 rounded-2xl font-bold text-xs tracking-wide flex items-center justify-center gap-2 border transition-all mt-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700">
+              <span>📁</span> Select Another Video
+            </button>
+          </div>
+
+          <!-- SCREEN VIEW 2: TV REMOTE SCREEN -->
+          <div id="view-remote" class="hidden flex-1 flex flex-col justify-between py-1">
+            
+            <!-- Quick Actions Bar -->
+            <div class="flex justify-between items-center px-1 mb-2">
+              <button class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1.5">
+                <span>⚡</span> Standby
+              </button>
+              <button class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1.5">
+                <span>☰</span> Menu
+              </button>
+              <button class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1.5">
+                <span>🔇</span> Mute
+              </button>
+            </div>
+
+            <!-- D-PAD CONTROLLER -->
+            <div class="flex items-center justify-center my-2">
+              <div id="dpad-wheel" class="w-48 h-48 rounded-full border flex items-center justify-center relative shadow-xl transition-all bg-zinc-900/90 border-zinc-800">
+                <!-- Up -->
+                <button class="absolute top-2 w-12 h-10 flex items-center justify-center text-zinc-300 active:text-white text-lg">▲</button>
+                <!-- Down -->
+                <button class="absolute bottom-2 w-12 h-10 flex items-center justify-center text-zinc-300 active:text-white text-lg">▼</button>
+                <!-- Left -->
+                <button class="absolute left-2 w-10 h-12 flex items-center justify-center text-zinc-300 active:text-white text-lg">◀</button>
+                <!-- Right -->
+                <button class="absolute right-2 w-10 h-12 flex items-center justify-center text-zinc-300 active:text-white text-lg">▶</button>
+                <!-- Center OK -->
+                <button id="dpad-ok" class="w-16 h-16 rounded-full font-extrabold text-xs shadow-md active:scale-95 transition-all flex items-center justify-center bg-zinc-800 text-zinc-100 border border-zinc-700">
+                  OK
+                </button>
+              </div>
+            </div>
+
+            <!-- Rocker Row (Volume Capsule & Seek Capsule) -->
+            <div class="grid grid-cols-2 gap-3 mt-1">
+              <!-- Volume Capsule -->
+              <div id="rocker-vol" class="h-28 rounded-2xl border p-2 flex flex-col justify-between items-center transition-all bg-zinc-900/80 border-zinc-800">
+                <button class="w-full py-1 text-center font-bold text-zinc-300 hover:text-white text-sm">+</button>
+                <div class="text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-500">VOL</div>
+                <button class="w-full py-1 text-center font-bold text-zinc-300 hover:text-white text-sm">−</button>
+              </div>
+
+              <!-- Seek Capsule -->
+              <div id="rocker-seek" class="h-28 rounded-2xl border p-2 flex flex-col justify-between items-center transition-all bg-zinc-900/80 border-zinc-800">
+                <button class="w-full py-1 text-center font-bold text-zinc-300 hover:text-white text-xs">⏩ +15s</button>
+                <div class="text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-500">SEEK</div>
+                <button class="w-full py-1 text-center font-bold text-zinc-300 hover:text-white text-xs">⏪ -15s</button>
+              </div>
+            </div>
+
+            <!-- Bottom Back & Keyboard Bar -->
+            <div class="flex gap-2 mt-2">
+              <button class="flex-1 py-2.5 rounded-xl font-bold text-xs bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white">
+                ↩ Back
+              </button>
+              <button id="remote-keyboard-btn" class="flex-1 py-2.5 rounded-xl font-bold text-xs border transition-all bg-zinc-800 text-zinc-200 border-zinc-700">
+                ⌨️ Type on TV
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Safe Area Indicator -->
+          <div class="flex justify-center pt-3">
+            <div class="w-28 h-1 rounded-full bg-zinc-700/60"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Theme Comparison & Notes -->
+      <div class="flex-1 max-w-sm space-y-4 text-sm">
+        <div id="info-card" class="p-5 rounded-2xl border bg-zinc-900/60 border-zinc-800 transition-all">
+          <h2 id="info-title" class="font-bold text-base text-white mb-2">Apple Obsidian (Minimalist Luxury)</h2>
+          <p id="info-desc" class="text-zinc-400 text-xs leading-relaxed mb-4">
+            Inspired by Apple TV and modern studio hardware. Deep pitch black background, subtle translucent frosted surfaces, and refined warm white/silver accents. Clean, calm, zero harsh glare.
+          </p>
+
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Palette DNA:</h3>
+          <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
+            <div class="p-2 rounded-lg bg-black border border-zinc-800">
+              <div class="w-4 h-4 rounded-full mx-auto mb-1 bg-black border border-zinc-700"></div>
+              <span>#000000</span>
+            </div>
+            <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+              <div class="w-4 h-4 rounded-full mx-auto mb-1 bg-zinc-900"></div>
+              <span>#18181B</span>
+            </div>
+            <div class="p-2 rounded-lg bg-zinc-800 border border-zinc-800">
+              <div class="w-4 h-4 rounded-full mx-auto mb-1 bg-zinc-800"></div>
+              <span>#27272A</span>
+            </div>
+            <div class="p-2 rounded-lg bg-zinc-200 text-zinc-900 font-bold border border-white">
+              <div class="w-4 h-4 rounded-full mx-auto mb-1 bg-white"></div>
+              <span>#F4F4F5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/30 text-xs text-zinc-400 space-y-2">
+          <div class="flex items-center gap-2 text-white font-semibold">
+            <span>💡</span> You can tell me your preference:
+          </div>
+          <p>Tell me which aesthetic you prefer, or describe your own dream look (e.g. <em>"Make it Apple style"</em>, <em>"I want Cinema Gold with amber"</em>, or <em>"Add a theme toggle in settings so I can switch anytime"</em>).</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const themes = {
+      apple: {
+        title: "Apple Obsidian (Minimalist Luxury)",
+        desc: "Inspired by Apple TV and premium studio hardware. Pitch black background, subtle frosted glass surfaces, and refined warm white/silver accents. Calm, zero harsh glare, incredibly sleek.",
+        frameBg: "bg-zinc-950 border-zinc-800 shadow-black",
+        screenBg: "bg-black text-zinc-100",
+        tabBg: "bg-zinc-900 border border-zinc-800",
+        tabActive: "bg-zinc-800 text-white shadow-sm",
+        tabInactive: "text-zinc-400 hover:text-white",
+        cardBg: "bg-zinc-900/90 border-zinc-800/80",
+        badgeBg: "bg-zinc-800 text-zinc-200",
+        accentFill: "bg-zinc-200",
+        heroPlay: "bg-zinc-100 text-black shadow-zinc-500/20",
+        ctaBtn: "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700",
+        dpadWheel: "bg-zinc-900/90 border-zinc-800",
+        dpadOk: "bg-zinc-800 text-zinc-100 border-zinc-700 shadow-md",
+        rockerBg: "bg-zinc-900/80 border-zinc-800",
+        keyboardBtn: "bg-zinc-800 text-zinc-200 border-zinc-700",
+        statusChip: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+      },
+      googletv: {
+        title: "Google TV Soft (Warm Velvet & Periwinkle)",
+        desc: "Muted dark charcoal slate, soothing periwinkle blue primary accents, soft rounded pill surfaces. Very easy on the eyes in a dark living room.",
+        frameBg: "bg-[#0e1219] border-slate-800 shadow-black",
+        screenBg: "bg-[#11141c] text-slate-100",
+        tabBg: "bg-[#1b202c] border border-slate-800",
+        tabActive: "bg-[#283042] text-blue-200 shadow-sm",
+        tabInactive: "text-slate-400 hover:text-slate-200",
+        cardBg: "bg-[#181d28] border-slate-800",
+        badgeBg: "bg-blue-500/20 text-blue-300",
+        accentFill: "bg-blue-400",
+        heroPlay: "bg-blue-400 text-slate-950 shadow-blue-500/30",
+        ctaBtn: "bg-[#1e2535] hover:bg-[#252e42] text-blue-300 border-slate-700",
+        dpadWheel: "bg-[#161a24] border-slate-800",
+        dpadOk: "bg-[#283042] text-blue-300 border-slate-700",
+        rockerBg: "bg-[#181d28] border-slate-800",
+        keyboardBtn: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+        statusChip: "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+      },
+      cinema: {
+        title: "Cinema Gold (Luxury Home Theater)",
+        desc: "True OLED black backdrop with rich warm champagne gold / amber accents. Feels like a high-end Marantz / McIntosh home cinema receiver.",
+        frameBg: "bg-stone-950 border-stone-800 shadow-black",
+        screenBg: "bg-black text-amber-50",
+        tabBg: "bg-stone-950 border border-stone-800",
+        tabActive: "bg-amber-950/40 text-amber-300 border border-amber-500/30",
+        tabInactive: "text-stone-500 hover:text-amber-200",
+        cardBg: "bg-stone-900/60 border-stone-800",
+        badgeBg: "bg-amber-500/20 text-amber-300",
+        accentFill: "bg-amber-400",
+        heroPlay: "bg-gradient-to-tr from-amber-500 to-amber-300 text-stone-950 shadow-amber-500/30",
+        ctaBtn: "bg-amber-950/30 hover:bg-amber-950/50 text-amber-300 border-amber-800/40",
+        dpadWheel: "bg-stone-900/60 border-stone-800",
+        dpadOk: "bg-stone-800 text-amber-300 border-stone-700",
+        rockerBg: "bg-stone-900/60 border-stone-800",
+        keyboardBtn: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+        statusChip: "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+      },
+      nordic: {
+        title: "Nordic Minimal (Matte Slate & Emerald)",
+        desc: "Modern Scandinavian electronics aesthetic. Clean matte graphite slate with subtle sage emerald accents. Sharp, understated, and functional.",
+        frameBg: "bg-slate-950 border-slate-800 shadow-black",
+        screenBg: "bg-[#0c0f14] text-slate-100",
+        tabBg: "bg-slate-900 border border-slate-800",
+        tabActive: "bg-slate-800 text-emerald-300 shadow-sm",
+        tabInactive: "text-slate-400 hover:text-slate-200",
+        cardBg: "bg-slate-900/80 border-slate-800",
+        badgeBg: "bg-emerald-500/20 text-emerald-300",
+        accentFill: "bg-emerald-400",
+        heroPlay: "bg-emerald-400 text-slate-950 shadow-emerald-500/20",
+        ctaBtn: "bg-slate-800 hover:bg-slate-700 text-emerald-300 border-slate-700",
+        dpadWheel: "bg-slate-900/80 border-slate-800",
+        dpadOk: "bg-slate-800 text-emerald-300 border-slate-700",
+        rockerBg: "bg-slate-900/80 border-slate-800",
+        keyboardBtn: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+        statusChip: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+      }
+    };
+
+    let currentTheme = 'apple';
+    let currentTab = 'player';
+
+    function selectTheme(key) {
+      currentTheme = key;
+      const t = themes[key];
+
+      // Update Tab Buttons
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.remove('bg-zinc-900', 'border-zinc-700', 'shadow-lg');
+        btn.classList.add('bg-slate-900/60', 'border-slate-800');
+      });
+      const activeBtn = document.getElementById('btn-' + key);
+      activeBtn.classList.remove('bg-slate-900/60', 'border-slate-800');
+      activeBtn.classList.add('bg-zinc-900', 'border-zinc-700', 'shadow-lg');
+
+      // Update Screen Styles
+      const screen = document.getElementById('screen');
+      screen.className = `w-full rounded-[34px] p-4 flex flex-col justify-between min-h-[640px] transition-colors duration-300 ${t.screenBg}`;
+
+      const card = document.getElementById('now-playing-card');
+      card.className = `p-4 rounded-2xl border transition-all ${t.cardBg}`;
+
+      const volCard = document.getElementById('volume-card');
+      volCard.className = `p-3.5 rounded-2xl border transition-all flex items-center gap-3 ${t.cardBg}`;
+
+      const scrubber = document.getElementById('scrubber-fill');
+      scrubber.className = `h-full rounded-full transition-all ${t.accentFill}`;
+
+      const volFill = document.getElementById('vol-fill');
+      volFill.className = `h-full rounded-full ${t.accentFill}`;
+
+      const heroPlay = document.getElementById('hero-play');
+      heroPlay.className = `w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shadow-xl active:scale-95 transition-all ${t.heroPlay}`;
+
+      const ctaBtn = document.getElementById('cta-button');
+      ctaBtn.className = `w-full py-3 rounded-2xl font-bold text-xs tracking-wide flex items-center justify-center gap-2 border transition-all mt-2 ${t.ctaBtn}`;
+
+      const dpadWheel = document.getElementById('dpad-wheel');
+      dpadWheel.className = `w-48 h-48 rounded-full border flex items-center justify-center relative shadow-xl transition-all ${t.dpadWheel}`;
+
+      const dpadOk = document.getElementById('dpad-ok');
+      dpadOk.className = `w-16 h-16 rounded-full font-extrabold text-xs shadow-md active:scale-95 transition-all flex items-center justify-center ${t.dpadOk}`;
+
+      const rockerVol = document.getElementById('rocker-vol');
+      rockerVol.className = `h-28 rounded-2xl border p-2 flex flex-col justify-between items-center transition-all ${t.rockerBg}`;
+
+      const rockerSeek = document.getElementById('rocker-seek');
+      rockerSeek.className = `h-28 rounded-2xl border p-2 flex flex-col justify-between items-center transition-all ${t.rockerBg}`;
+
+      const keyboardBtn = document.getElementById('remote-keyboard-btn');
+      keyboardBtn.className = `flex-1 py-2.5 rounded-xl font-bold text-xs border transition-all ${t.keyboardBtn}`;
+
+      const statusChip = document.getElementById('status-chip');
+      statusChip.className = `text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md ${t.statusChip}`;
+
+      // Info Card
+      document.getElementById('info-title').textContent = t.title;
+      document.getElementById('info-desc').textContent = t.desc;
+
+      switchTab(currentTab);
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const t = themes[currentTheme];
+      const viewPlayer = document.getElementById('view-player');
+      const viewRemote = document.getElementById('view-remote');
+      const tabPlayer = document.getElementById('tab-player');
+      const tabRemote = document.getElementById('tab-remote');
+
+      if (tab === 'player') {
+        viewPlayer.classList.remove('hidden');
+        viewRemote.classList.add('hidden');
+        tabPlayer.className = `py-1.5 text-xs font-bold rounded-xl transition-all ${t.tabActive}`;
+        tabRemote.className = `py-1.5 text-xs font-semibold rounded-xl transition-all ${t.tabInactive}`;
+      } else {
+        viewPlayer.classList.add('hidden');
+        viewRemote.classList.remove('hidden');
+        tabPlayer.className = `py-1.5 text-xs font-semibold rounded-xl transition-all ${t.tabInactive}`;
+        tabRemote.className = `py-1.5 text-xs font-bold rounded-xl transition-all ${t.tabActive}`;
+      }
+    }
+  </script>
+</body>
+</html>
