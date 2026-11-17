@@ -853,6 +853,13 @@ class CastServerService : Service() {
                   v.muted = false;
                 }
                 showHud('🔊', Math.round(v.volume * 100) + '%');
+              } else if (s.cmd === 'volumeRelative') {
+                v.volume = Math.max(0, Math.min(1, v.volume + (s.val || 0)));
+                if (v.volume > 0) {
+                  isMutedByCommand = false;
+                  v.muted = false;
+                }
+                showHud('🔊', Math.round(v.volume * 100) + '%');
               } else if (s.cmd === 'mute') {
                 isMutedByCommand = !isMutedByCommand;
                 v.muted = isMutedByCommand;
@@ -876,7 +883,7 @@ class CastServerService : Service() {
               }
               reportStatus();
             } catch(e) {}
-          }, 350);
+          }, 200);
 
           setInterval(reportStatus, 500);
 
@@ -947,6 +954,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -968,6 +977,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -1023,7 +1033,7 @@ class MainActivity : ComponentActivity() {
 
             MaterialTheme(colorScheme = luxuryDarkScheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    VdoRemoteScreen(initialUri = sharedUri)
+                    VdoMainScreen(initialUri = sharedUri)
                 }
             }
         }
@@ -1070,11 +1080,10 @@ fun getLocalWifiIp(context: Context): String {
 }
 
 @Composable
-fun VdoRemoteScreen(initialUri: Uri?) {
+fun VdoMainScreen(initialUri: Uri?) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val scrollState = rememberScrollState()
-
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Player, 1 = TV Remote
     var selectedUri by remember { mutableStateOf(initialUri ?: CastServerService.currentVideoUri) }
     var showInfoDialog by remember { mutableStateOf(false) }
 
@@ -1113,14 +1122,14 @@ fun VdoRemoteScreen(initialUri: Uri?) {
     if (showInfoDialog) {
         AlertDialog(
             onDismissRequest = { showInfoDialog = false },
-            title = { Text("VDO Cast Connection", fontWeight = FontWeight.Bold) },
+            title = { Text("VDO Cast Link Status", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Phone Wi-Fi IP: ${getLocalWifiIp(context)}:5050")
+                    Text("Phone Wi-Fi IP: ${getLocalWifiIp(context)}:5050", fontWeight = FontWeight.SemiBold)
                     Text("Receiver: VDO TV (TX3 Mini)")
-                    Text("State: ${if (isConnected) "Live Synced" else "Standby (Waiting for TV)"}")
+                    Text("Connection: ${if (isConnected) "Live Synced with TV" else "Standby (Waiting for TV)"}")
                     Divider(color = Color(0xFF1E293B))
-                    Text("Ensure your TX3 Mini box is open on VDO TV and connected to the same Wi-Fi.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
+                    Text("Ensure your TX3 Mini box is open on VDO TV and connected to the same Wi-Fi network.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
                 }
             },
             confirmButton = {
@@ -1129,84 +1138,179 @@ fun VdoRemoteScreen(initialUri: Uri?) {
         )
     }
 
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            ModernTopAppBar(
+                selectedTab = selectedTab,
+                isConnected = isConnected,
+                onInfoClick = { showInfoDialog = true },
+                onStandbyClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    CastServerService.pushCommand("stop")
+                }
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = Color(0xFF090D18),
+                tonalElevation = 8.dp,
+                modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            ) {
+                NavigationBarItem(
+                    selected = selectedTab == 0,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedTab = 0
+                    },
+                    icon = { Icon(Icons.Default.PlayCircle, contentDescription = "Player", modifier = Modifier.size(24.dp)) },
+                    label = { Text("Player", fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF060913),
+                        selectedTextColor = Color(0xFF00E5FF),
+                        indicatorColor = Color(0xFF00E5FF),
+                        unselectedIconColor = Color(0xFF64748B),
+                        unselectedTextColor = Color(0xFF64748B)
+                    )
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 1,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedTab = 1
+                    },
+                    icon = { Icon(Icons.Default.SettingsRemote, contentDescription = "TV Remote", modifier = Modifier.size(24.dp)) },
+                    label = { Text("TV Remote", fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF060913),
+                        selectedTextColor = Color(0xFF00E5FF),
+                        indicatorColor = Color(0xFF00E5FF),
+                        unselectedIconColor = Color(0xFF64748B),
+                        unselectedTextColor = Color(0xFF64748B)
+                    )
+                )
+            }
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            Crossfade(targetState = selectedTab, animationSpec = tween(220), label = "TabSwitch") { tab ->
+                when (tab) {
+                    0 -> PlayerScreen(
+                        selectedUri = selectedUri,
+                        tvStatus = tvStatus,
+                        onSelectVideo = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+                    )
+                    1 -> RemoteScreen(
+                        tvStatus = tvStatus,
+                        isConnected = isConnected
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernTopAppBar(
+    selectedTab: Int,
+    isConnected: Boolean,
+    onInfoClick: () -> Unit,
+    onStandbyClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(Color(0xFF00E5FF), Color(0xFF3B82F6)))),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    if (selectedTab == 0) Icons.Default.PlayCircle else Icons.Default.SettingsRemote,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Column {
+                Text(
+                    if (selectedTab == 0) "VDO Player" else "VDO TV Remote",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                )
+                Text("VDO Cast Suite", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = if (isConnected) Color(0xFF22C55E).copy(alpha = 0.15f) else Color(0xFF1E293B),
+                border = BorderStroke(1.dp, if (isConnected) Color(0xFF22C55E).copy(alpha = 0.4f) else Color(0xFF334155)),
+                modifier = Modifier.clickable { onInfoClick() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF))
+                    )
+                    Text(
+                        if (isConnected) "VDO TV" else "Wi-Fi Ready",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF)
+                    )
+                }
+            }
+
+            FilledTonalIconButton(
+                onClick = onStandbyClick,
+                modifier = Modifier.size(36.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF1E293B),
+                    contentColor = Color(0xFFEF4444)
+                )
+            ) {
+                Icon(Icons.Default.PowerSettingsNew, contentDescription = "TV Standby", modifier = Modifier.size(18.dp))
+            }
+        }
+    }
+}
+
+// ==================== SCREEN 1: DEDICATED MEDIA PLAYER ====================
+@Composable
+fun PlayerScreen(
+    selectedUri: Uri?,
+    tvStatus: TvPlaybackState,
+    onSelectVideo: () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 20.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top Modern Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Color(0xFF00E5FF), Color(0xFF3B82F6)))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Tv, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
-                }
-                Column {
-                    Text("VDO Remote", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp)
-                    Text("VDO Cast Suite", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                // Connection Status Chip
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = if (isConnected) Color(0xFF22C55E).copy(alpha = 0.15f) else Color(0xFF1E293B),
-                    border = BorderStroke(1.dp, if (isConnected) Color(0xFF22C55E).copy(alpha = 0.4f) else Color(0xFF334155)),
-                    modifier = Modifier.clickable { showInfoDialog = true }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(7.dp)
-                                .clip(CircleShape)
-                                .background(if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF))
-                        )
-                        Text(
-                            if (isConnected) "VDO TV" else "Wi-Fi Ready",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF)
-                        )
-                    }
-                }
-
-                // TV Standby / Power Button
-                FilledTonalIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        CastServerService.pushCommand("stop")
-                    },
-                    modifier = Modifier.size(36.dp),
-                    colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = Color(0xFF1E293B),
-                        contentColor = Color(0xFFEF4444)
-                    )
-                ) {
-                    Icon(Icons.Default.PowerSettingsNew, contentDescription = "TV Standby", modifier = Modifier.size(18.dp))
-                }
-            }
-        }
-
-        // Now Playing & Live Scrubber Card
         NowPlayingCard(
             title = if (tvStatus.title.isNotEmpty()) tvStatus.title else CastServerService.currentVideoTitle,
             status = tvStatus.status,
@@ -1214,7 +1318,6 @@ fun VdoRemoteScreen(initialUri: Uri?) {
             duration = tvStatus.duration
         )
 
-        // Transport Controls Row (Skip -10s, Hero Play/Pause, Skip +10s)
         HeroTransportRow(
             isPlaying = tvStatus.status == "playing",
             onToggle = {
@@ -1227,41 +1330,27 @@ fun VdoRemoteScreen(initialUri: Uri?) {
             }
         )
 
-        // TV Directional Navigation Wheel (D-Pad)
-        TactileRemoteWheel(onCommand = { cmd ->
-            when (cmd) {
-                "up" -> CastServerService.pushCommand("seekRelative", 30.0)
-                "down" -> CastServerService.pushCommand("seekRelative", -30.0)
-                "left" -> CastServerService.pushCommand("seekRelative", -10.0)
-                "right" -> CastServerService.pushCommand("seekRelative", 10.0)
-                "ok" -> CastServerService.pushCommand("toggle")
-                "back" -> CastServerService.pushCommand("stop")
-                "menu" -> CastServerService.pushCommand("menu")
-            }
-        })
-
-        // Volume Capsule Slider
         VolumeCapsuleCard(volume = tvStatus.volume, isMuted = tvStatus.muted)
 
-        // Quick Controls (Speed & Aspect Ratio)
         QuickModifiersCard(currentSpeed = tvStatus.playbackRate, currentAspect = tvStatus.aspectRatio)
 
-        // Select / Change Video Primary Action Button
         Button(
-            onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            onClick = onSelectVideo,
+            modifier = Modifier.fillMaxWidth().height(54.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Icon(Icons.Default.VideoLibrary, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(10.dp))
             Text(
                 if (selectedUri == null) "Select Video to Cast" else "Change Video",
                 fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 color = Color.Black
             )
         }
+
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -1282,9 +1371,9 @@ fun NowPlayingCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
         border = BorderStroke(1.dp, Color(0xFF1E293B)),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(22.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1299,7 +1388,7 @@ fun NowPlayingCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = if (duration > 0) "Total length: ${formatTime(duration)}" else "No stream active",
+                        text = if (duration > 0) "Total length: ${formatTime(duration)}" else "No active stream",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1329,7 +1418,6 @@ fun NowPlayingCard(
                 }
             }
 
-            // Scrubber Slider
             Slider(
                 value = effectiveTime.toFloat().coerceIn(0f, maxDuration),
                 onValueChange = {
@@ -1349,7 +1437,6 @@ fun NowPlayingCard(
                 )
             )
 
-            // Timestamps
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(formatTime(effectiveTime), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
                 if (duration > 0) {
@@ -1372,7 +1459,6 @@ fun HeroTransportRow(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // -30s
         FilledTonalIconButton(
             onClick = { onSeek(-30.0) },
             modifier = Modifier.size(50.dp),
@@ -1382,7 +1468,6 @@ fun HeroTransportRow(
             Icon(Icons.Default.Replay30, "-30s", modifier = Modifier.size(24.dp))
         }
 
-        // -10s
         FilledTonalIconButton(
             onClick = { onSeek(-10.0) },
             modifier = Modifier.size(54.dp),
@@ -1392,10 +1477,9 @@ fun HeroTransportRow(
             Icon(Icons.Default.Replay10, "-10s", modifier = Modifier.size(26.dp))
         }
 
-        // HERO PLAY/PAUSE BUTTON
         FilledIconButton(
             onClick = onToggle,
-            modifier = Modifier.size(72.dp),
+            modifier = Modifier.size(74.dp),
             shape = CircleShape,
             colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
         ) {
@@ -1403,11 +1487,10 @@ fun HeroTransportRow(
                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                 contentDescription = "Play/Pause",
                 tint = Color.Black,
-                modifier = Modifier.size(38.dp)
+                modifier = Modifier.size(40.dp)
             )
         }
 
-        // +10s
         FilledTonalIconButton(
             onClick = { onSeek(10.0) },
             modifier = Modifier.size(54.dp),
@@ -1417,7 +1500,6 @@ fun HeroTransportRow(
             Icon(Icons.Default.Forward10, "+10s", modifier = Modifier.size(26.dp))
         }
 
-        // +30s
         FilledTonalIconButton(
             onClick = { onSeek(30.0) },
             modifier = Modifier.size(50.dp),
@@ -1425,105 +1507,6 @@ fun HeroTransportRow(
             colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF111827), contentColor = Color(0xFF94A3B8))
         ) {
             Icon(Icons.Default.Forward30, "+30s", modifier = Modifier.size(24.dp))
-        }
-    }
-}
-
-@Composable
-fun TactileRemoteWheel(onCommand: (String) -> Unit) {
-    val haptic = LocalHapticFeedback.current
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
-        border = BorderStroke(1.dp, Color(0xFF1E293B)),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("TV Navigation", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
-            Spacer(Modifier.height(14.dp))
-
-            // Unified Tactile Wheel Disc
-            Box(
-                modifier = Modifier
-                    .size(210.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF131D31)),
-                contentAlignment = Alignment.Center
-            ) {
-                // UP
-                IconButton(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("up") },
-                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(52.dp)
-                ) {
-                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
-                }
-
-                // LEFT
-                IconButton(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("left") },
-                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp).size(52.dp)
-                ) {
-                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Left", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
-                }
-
-                // CENTER OK DISC
-                FilledIconButton(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("ok") },
-                    modifier = Modifier.size(72.dp),
-                    shape = CircleShape,
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
-                ) {
-                    Text("OK", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color.Black)
-                }
-
-                // RIGHT
-                IconButton(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("right") },
-                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(52.dp)
-                ) {
-                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Right", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
-                }
-
-                // DOWN
-                IconButton(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("down") },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp).size(52.dp)
-                ) {
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
-                }
-            }
-
-            Spacer(Modifier.height(18.dp))
-
-            // Flanking Buttons: Standby & Menu
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("back") },
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0xFF334155))
-                ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Standby")
-                }
-
-                OutlinedButton(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("menu") },
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0xFF334155))
-                ) {
-                    Icon(Icons.Default.Menu, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("TV Menu")
-                }
-            }
         }
     }
 }
@@ -1595,7 +1578,6 @@ fun QuickModifiersCard(currentSpeed: Float, currentAspect: String) {
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            // Speed Section
             Column {
                 Text("Playback Speed", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
                 Spacer(Modifier.height(6.dp))
@@ -1616,7 +1598,6 @@ fun QuickModifiersCard(currentSpeed: Float, currentAspect: String) {
                 }
             }
 
-            // Aspect Ratio Section
             Column {
                 Text("Screen Aspect Ratio", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
                 Spacer(Modifier.height(6.dp))
@@ -1634,6 +1615,375 @@ fun QuickModifiersCard(currentSpeed: Float, currentAspect: String) {
                             modifier = Modifier.weight(1f)
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+// ==================== SCREEN 2: DEDICATED TV REMOTE CONTROLLER ====================
+@Composable
+fun RemoteScreen(
+    tvStatus: TvPlaybackState,
+    isConnected: Boolean
+) {
+    val haptic = LocalHapticFeedback.current
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        // TV Live Status Feedback Strip
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFF0E1424),
+            border = BorderStroke(1.dp, Color(0xFF1E293B)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF))
+                    )
+                    Text(
+                        if (isConnected) "VDO TV • LIVE SYNC" else "TV STANDBY",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF)
+                    )
+                }
+                Text(
+                    if (tvStatus.duration > 0) "${formatTime(tvStatus.currentTime)} / ${formatTime(tvStatus.duration)}" else "Ready",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF94A3B8)
+                )
+            }
+        }
+
+        // Remote Top Utility Bar (Power / Standby, TV Menu, Mute)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalIconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    CastServerService.pushCommand("stop")
+                },
+                modifier = Modifier.size(52.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF200F17),
+                    contentColor = Color(0xFFEF4444)
+                )
+            ) {
+                Icon(Icons.Default.PowerSettingsNew, contentDescription = "TV Power", modifier = Modifier.size(24.dp))
+            }
+
+            FilledTonalIconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    CastServerService.pushCommand("menu")
+                },
+                modifier = Modifier.size(52.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF131D31),
+                    contentColor = Color(0xFF00E5FF)
+                )
+            ) {
+                Icon(Icons.Default.Menu, contentDescription = "TV Menu OSD", modifier = Modifier.size(24.dp))
+            }
+
+            FilledTonalIconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    CastServerService.pushCommand("mute")
+                },
+                modifier = Modifier.size(52.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Color(0xFF131D31),
+                    contentColor = if (tvStatus.muted) Color(0xFFEF4444) else Color(0xFFF59E0B)
+                )
+            ) {
+                Icon(
+                    if (tvStatus.muted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                    contentDescription = "Mute",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // Tactile D-Pad Navigation Wheel
+        TactileRemoteWheel(onCommand = { cmd ->
+            when (cmd) {
+                "up" -> CastServerService.pushCommand("seekRelative", 30.0)
+                "down" -> CastServerService.pushCommand("seekRelative", -30.0)
+                "left" -> CastServerService.pushCommand("seekRelative", -10.0)
+                "right" -> CastServerService.pushCommand("seekRelative", 10.0)
+                "ok" -> CastServerService.pushCommand("toggle")
+            }
+        })
+
+        // Hardware-Style Dual Rocker Capsules (Volume & Seek)
+        HardwareRockersRow(
+            volume = tvStatus.volume,
+            isMuted = tvStatus.muted,
+            onVolumeChange = { delta ->
+                CastServerService.pushCommand("volumeRelative", delta)
+            },
+            onSeekRelative = { offset ->
+                CastServerService.pushCommand("seekRelative", offset)
+            }
+        )
+
+        // Bottom Remote Action Row: Standby, Hero Play/Pause, Quick Aspect
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    CastServerService.pushCommand("stop")
+                },
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Color(0xFF334155)),
+                modifier = Modifier.height(46.dp)
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Standby")
+            }
+
+            FilledIconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    CastServerService.pushCommand("toggle")
+                },
+                modifier = Modifier.size(56.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
+            ) {
+                Icon(
+                    if (tvStatus.status == "playing") Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = "Play/Pause",
+                    tint = Color.Black,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+
+            OutlinedButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val nextAspect = when (tvStatus.aspectRatio) {
+                        "contain" -> "cover"
+                        "cover" -> "fill"
+                        else -> "contain"
+                    }
+                    CastServerService.pushCommand("setAspect", 0.0, nextAspect)
+                },
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Color(0xFF334155)),
+                modifier = Modifier.height(46.dp)
+            ) {
+                Icon(Icons.Default.AspectRatio, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(when (tvStatus.aspectRatio) {
+                    "cover" -> "Fill"
+                    "fill" -> "Stretch"
+                    else -> "Fit"
+                })
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+    }
+}
+
+@Composable
+fun TactileRemoteWheel(onCommand: (String) -> Unit) {
+    val haptic = LocalHapticFeedback.current
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
+        border = BorderStroke(1.dp, Color(0xFF1E293B)),
+        shape = RoundedCornerShape(26.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(22.dp).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Directional Navigation Pad", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
+            Spacer(Modifier.height(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(220.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF131D31)),
+                contentAlignment = Alignment.Center
+            ) {
+                // UP (+30s)
+                IconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("up") },
+                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(52.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                }
+
+                // LEFT (-10s)
+                IconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("left") },
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp).size(52.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Left", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                }
+
+                // CENTER OK DISC
+                FilledIconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("ok") },
+                    modifier = Modifier.size(76.dp),
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
+                ) {
+                    Text("OK", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = Color.Black)
+                }
+
+                // RIGHT (+10s)
+                IconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("right") },
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(52.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Right", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                }
+
+                // DOWN (-30s)
+                IconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("down") },
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp).size(52.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", tint = Color(0xFF00E5FF), modifier = Modifier.size(34.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HardwareRockersRow(
+    volume: Float,
+    isMuted: Boolean,
+    onVolumeChange: (Double) -> Unit,
+    onSeekRelative: (Double) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Volume Rocker Capsule
+        Card(
+            shape = RoundedCornerShape(26.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
+            border = BorderStroke(1.dp, Color(0xFF1E293B)),
+            modifier = Modifier.width(110.dp).height(160.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onVolumeChange(0.05)
+                    },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Vol +", tint = Color(0xFF00E5FF))
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                        contentDescription = null,
+                        tint = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        if (isMuted) "MUTED" else "${(volume * 100).toInt()}%",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF94A3B8)
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onVolumeChange(-0.05)
+                    },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(Icons.Default.Remove, contentDescription = "Vol -", tint = Color(0xFF00E5FF))
+                }
+            }
+        }
+
+        // Seek Rocker Capsule
+        Card(
+            shape = RoundedCornerShape(26.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
+            border = BorderStroke(1.dp, Color(0xFF1E293B)),
+            modifier = Modifier.width(110.dp).height(160.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSeekRelative(15.0)
+                    },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(Icons.Default.FastForward, contentDescription = "FF 15s", tint = Color(0xFF818CF8))
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("SEEK", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF818CF8))
+                    Text("±15s", fontSize = 10.sp, color = Color(0xFF64748B))
+                }
+
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSeekRelative(-15.0)
+                    },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(Icons.Default.FastRewind, contentDescription = "Rew 15s", tint = Color(0xFF818CF8))
                 }
             }
         }
