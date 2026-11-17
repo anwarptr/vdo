@@ -2173,6 +2173,9 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+    implementation("androidx.media3:media3-common:1.3.1")
 }
 EOF
 
@@ -2392,44 +2395,96 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
+import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TvReceiverActivity : Activity() {
 
     private lateinit var nsdManager: NsdManager
     private var discoveryListener: NsdManager.DiscoveryListener? = null
-    private lateinit var webView: WebView
-    private lateinit var statusContainer: FrameLayout
-    private lateinit var statusText: TextView
-    private var connected = false
+    private var exoPlayer: ExoPlayer? = null
+    private lateinit var playerView: PlayerView
 
-    @SuppressLint("SetJavaScriptEnabled")
+    private lateinit var ambientContainer: LinearLayout
+    private lateinit var clockView: TextView
+    private lateinit var dateView: TextView
+    private lateinit var statusText: TextView
+
+    private lateinit var osdContainer: LinearLayout
+    private lateinit var osdTitle: TextView
+    private lateinit var osdTime: TextView
+    private lateinit var osdProgressBar: ProgressBar
+
+    private lateinit var hudToast: TextView
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var isPolling = false
+    private var connected = false
+    private var phoneHost: String? = null
+    private var phonePort = 5050
+    private var lastSeq = 0
+
+    private var currentTitle = "Video"
+    private var currentVolume = 1.0f
+    private var isMuted = false
+    private var currentSpeed = 1.0f
+    private var currentAspect = "contain"
+
+    private val clockRunnable = object : Runnable {
+        override fun run() {
+            updateClock()
+            mainHandler.postDelayed(this, 1000)
+        }
+    }
+
+    private val osdHideRunnable = Runnable {
+        osdContainer.visibility = View.GONE
+    }
+
+    private val hudHideRunnable = Runnable {
+        hudToast.visibility = View.GONE
+    }
+
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Ensure volume keys control media playback audio stream (fixes no sound / wrong audio stream on TV)
+        // Route hardware volume keys to media stream and request audio focus
         volumeControlStream = AudioManager.STREAM_MUSIC
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-        @Suppress("DEPRECATION")
-        audioManager?.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        requestMediaAudioFocus()
 
-        // Keep TV screen awake during casting
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Fullscreen immersive sticky mode
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = (
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -2442,56 +2497,192 @@ class TvReceiverActivity : Activity() {
 
         val root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
 
-        webView = WebView(this).apply {
-            visibility = View.GONE
+        // 1. Native ExoPlayer View (Hardware AC3/EAC3/AAC/DTS decoding)
+        playerView = PlayerView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            useController = false
             setBackgroundColor(Color.BLACK)
-            settings.apply {
-                javaScriptEnabled = true
-                mediaPlaybackRequiresUserGesture = false
-                domStorageEnabled = true
-                databaseEnabled = true
-                allowFileAccess = true
-                allowContentAccess = true
-                setSupportZoom(false)
-                loadWithOverviewMode = true
-                useWideViewPort = true
-                cacheMode = WebSettings.LOAD_NO_CACHE
-            }
-            webChromeClient = WebChromeClient()
-            webViewClient = object : WebViewClient() {
-                override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
-                    showDisconnectedState("Connection interrupted. Reconnecting to phone...")
+            visibility = View.GONE
+        }
+        root.addView(playerView)
+
+        exoPlayer = ExoPlayer.Builder(this).build().apply {
+            addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) {
+                        showHud("⏹", "Playback Ended")
+                    }
+                    updateOsdProgress()
                 }
-            }
+
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    updateOsdProgress()
+                }
+            })
+        }
+        playerView.player = exoPlayer
+
+        // 2. Ambient Standby Container
+        ambientContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.parseColor("#05070E"))
+            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
 
-        statusContainer = FrameLayout(this).apply {
-            setBackgroundColor(Color.parseColor("#05070E"))
+        val brandLogo = TextView(this).apply {
+            text = "VDO TV"
+            setTextColor(Color.parseColor("#00E5FF"))
+            textSize = 34f
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 10)
         }
+        ambientContainer.addView(brandLogo)
+
+        clockView = TextView(this).apply {
+            text = "--:--"
+            setTextColor(Color.WHITE)
+            textSize = 64f
+            typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL)
+            gravity = Gravity.CENTER
+        }
+        ambientContainer.addView(clockView)
+
+        dateView = TextView(this).apply {
+            text = "Ready to Cast"
+            setTextColor(Color.parseColor("#94A3B8"))
+            textSize = 18f
+            gravity = Gravity.CENTER
+            setPadding(0, 4, 0, 24)
+        }
+        ambientContainer.addView(dateView)
 
         statusText = TextView(this).apply {
-            text = "VDO TV Receiver\n\nSearching for VDO Remote on Wi-Fi...\nMake sure your phone and TV are on the same Wi-Fi network."
-            setTextColor(Color.parseColor("#00E5FF"))
-            textSize = 20f
+            text = "Searching for VDO Remote on Wi-Fi...\nMake sure your phone and TV box are on the same Wi-Fi network."
+            setTextColor(Color.parseColor("#38BDF8"))
+            textSize = 16f
             gravity = Gravity.CENTER
-            setLineSpacing(8f, 1.2f)
-            setPadding(40, 40, 40, 40)
+            setPadding(40, 16, 40, 16)
+        }
+        ambientContainer.addView(statusText)
+        root.addView(ambientContainer)
+
+        // 3. Cinematic OSD Overlay
+        osdContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM).apply {
+                setMargins(40, 0, 40, 30)
+            }
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#CC0B0F19"))
+                cornerRadius = 24f
+            }
+            setPadding(30, 20, 30, 20)
+            visibility = View.GONE
         }
 
-        statusContainer.addView(statusText, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT, Gravity.CENTER))
-        root.addView(webView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-        root.addView(statusContainer, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        osdTitle = TextView(this).apply {
+            text = "Playing Video"
+            setTextColor(Color.WHITE)
+            textSize = 20f
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        osdContainer.addView(osdTitle)
+
+        osdProgressBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 12).apply {
+                setMargins(0, 10, 0, 8)
+            }
+            max = 1000
+            progressDrawable = GradientDrawable().apply {
+                setColor(Color.parseColor("#00E5FF"))
+                cornerRadius = 6f
+            }
+        }
+        osdContainer.addView(osdProgressBar)
+
+        osdTime = TextView(this).apply {
+            text = "00:00 / 00:00"
+            setTextColor(Color.parseColor("#CBD5E1"))
+            textSize = 14f
+        }
+        osdContainer.addView(osdTime)
+        root.addView(osdContainer)
+
+        // 4. Center HUD Toast
+        hudToast = TextView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#E6090D18"))
+                cornerRadius = 28f
+                setStroke(2, Color.parseColor("#334155"))
+            }
+            setPadding(40, 16, 40, 16)
+            setTextColor(Color.WHITE)
+            textSize = 22f
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            visibility = View.GONE
+        }
+        root.addView(hudToast)
+
         setContentView(root)
+
+        mainHandler.post(clockRunnable)
 
         nsdManager = getSystemService(Context.NSD_SERVICE) as NsdManager
         startDiscovery()
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun requestMediaAudioFocus() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
         @Suppress("DEPRECATION")
         audioManager?.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requestMediaAudioFocus()
+    }
+
+    private fun updateClock() {
+        val now = Date()
+        clockView.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(now)
+        dateView.text = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(now)
+        updateOsdProgress()
+    }
+
+    private fun updateOsdProgress() {
+        val player = exoPlayer ?: return
+        if (playerView.visibility == View.VISIBLE && player.duration > 0) {
+            val progress = ((player.currentPosition.toDouble() / player.duration) * 1000).toInt()
+            osdProgressBar.progress = progress
+            osdTime.text = "${formatTime(player.currentPosition)} / ${formatTime(player.duration)}"
+        }
+    }
+
+    private fun showOsd() {
+        osdContainer.visibility = View.VISIBLE
+        updateOsdProgress()
+        mainHandler.removeCallbacks(osdHideRunnable)
+        mainHandler.postDelayed(osdHideRunnable, 3000)
+    }
+
+    private fun showHud(icon: String, text: String) {
+        hudToast.text = "$icon  $text"
+        hudToast.visibility = View.VISIBLE
+        mainHandler.removeCallbacks(hudHideRunnable)
+        mainHandler.postDelayed(hudHideRunnable, 1500)
+        showOsd()
+    }
+
+    private fun formatTime(ms: Long): String {
+        if (ms <= 0) return "00:00"
+        val totalSec = ms / 1000
+        val m = totalSec / 60
+        val s = totalSec % 60
+        return String.format(Locale.US, "%02d:%02d", m, s)
     }
 
     private fun startDiscovery() {
@@ -2504,92 +2695,287 @@ class TvReceiverActivity : Activity() {
                         override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) {}
                         override fun onServiceResolved(info: NsdServiceInfo) {
                             val host = info.host?.hostAddress ?: return
-                            val port = info.port
+                            phoneHost = host
+                            phonePort = info.port
                             connected = true
                             runOnUiThread {
-                                statusContainer.visibility = View.GONE
-                                webView.visibility = View.VISIBLE
-                                webView.loadUrl("http://$host:$port/tv")
+                                statusText.text = "Connected to VDO Remote on Wi-Fi\nReady to Cast"
+                                statusText.setTextColor(Color.parseColor("#22C55E"))
                             }
+                            startStatePolling()
                         }
                     })
                 }
             }
             override fun onServiceLost(service: NsdServiceInfo) {
-                showDisconnectedState("Phone disconnected. Searching for VDO Remote on Wi-Fi...")
+                connected = false
+                runOnUiThread {
+                    statusText.text = "Searching for VDO Remote on Wi-Fi...\nMake sure your phone and TV box are on the same Wi-Fi network."
+                    statusText.setTextColor(Color.parseColor("#38BDF8"))
+                }
             }
             override fun onDiscoveryStopped(serviceType: String) {}
             override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {}
             override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
         }
-        nsdManager.discoverServices("_vdocast._tcp.", NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+        try {
+            nsdManager.discoverServices("_vdocast._tcp.", NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+        } catch (_: Exception) {}
     }
 
-    private fun showDisconnectedState(message: String) {
-        connected = false
-        runOnUiThread {
-            webView.visibility = View.GONE
-            statusContainer.visibility = View.VISIBLE
-            statusText.text = "VDO TV Receiver\n\n$message"
+    private fun startStatePolling() {
+        if (isPolling) return
+        isPolling = true
+
+        // Command Polling Thread
+        Thread {
+            while (isPolling) {
+                val host = phoneHost
+                if (host != null) {
+                    try {
+                        val url = URL("http://$host:$phonePort/api/state")
+                        val conn = (url.openConnection() as HttpURLConnection).apply {
+                            connectTimeout = 1000
+                            readTimeout = 1000
+                        }
+                        if (conn.responseCode == 200) {
+                            val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                            val resp = reader.readText()
+                            reader.close()
+                            val json = JSONObject(resp)
+                            val seq = json.optInt("seq", 0)
+                            if (seq != lastSeq) {
+                                lastSeq = seq
+                                val cmd = json.optString("cmd", "")
+                                val value = json.optDouble("val", 0.0)
+                                val strVal = json.optString("strVal", "")
+                                mainHandler.post { executeRemoteCommand(cmd, value, strVal) }
+                            }
+                        }
+                        conn.disconnect()
+                    } catch (_: Exception) {}
+                }
+                try { Thread.sleep(200) } catch (_: Exception) {}
+            }
+        }.start()
+
+        // Telemetry Reporting Thread (every 500ms)
+        Thread {
+            while (isPolling) {
+                reportStatusToPhone()
+                try { Thread.sleep(500) } catch (_: Exception) {}
+            }
+        }.start()
+    }
+
+    private fun executeRemoteCommand(cmd: String, value: Double, strVal: String) {
+        val player = exoPlayer ?: return
+        when (cmd) {
+            "load" -> {
+                currentTitle = if (strVal.isNotEmpty()) strVal else "Playing Video"
+                osdTitle.text = currentTitle
+                ambientContainer.visibility = View.GONE
+                playerView.visibility = View.VISIBLE
+
+                val streamUrl = "http://$phoneHost:$phonePort/stream?t=$lastSeq"
+                val mediaItem = MediaItem.fromUri(streamUrl)
+                player.setMediaItem(mediaItem)
+                player.prepare()
+                player.play()
+                showHud("▶", "Playing")
+            }
+            "play" -> {
+                player.play()
+                showHud("▶", "Play")
+            }
+            "pause" -> {
+                player.pause()
+                showHud("⏸", "Paused")
+            }
+            "toggle" -> {
+                if (player.isPlaying) {
+                    player.pause()
+                    showHud("⏸", "Paused")
+                } else {
+                    player.play()
+                    showHud("▶", "Play")
+                }
+            }
+            "seekRelative" -> {
+                val newPos = maxOf(0L, minOf(player.duration, player.currentPosition + (value * 1000).toLong()))
+                player.seekTo(newPos)
+                val sign = if (value >= 0) "+" else ""
+                showHud(if (value >= 0) "⏩" else "⏪", "$sign${value.toInt()}s (${formatTime(newPos)})")
+            }
+            "seekAbsolute" -> {
+                val newPos = (value * 1000).toLong()
+                player.seekTo(newPos)
+                showHud("⏩", formatTime(newPos))
+            }
+            "setVolume" -> {
+                currentVolume = value.toFloat().coerceIn(0f, 1f)
+                isMuted = false
+                player.volume = currentVolume
+                showHud("🔊", "${(currentVolume * 100).toInt()}%")
+            }
+            "volumeRelative" -> {
+                currentVolume = (currentVolume + value.toFloat()).coerceIn(0f, 1f)
+                isMuted = false
+                player.volume = currentVolume
+                showHud("🔊", "${(currentVolume * 100).toInt()}%")
+            }
+            "mute" -> {
+                isMuted = !isMuted
+                player.volume = if (isMuted) 0f else currentVolume
+                showHud(if (isMuted) "🔇" else "🔊", if (isMuted) "Muted" else "${(currentVolume * 100).toInt()}%")
+            }
+            "setSpeed" -> {
+                currentSpeed = value.toFloat().coerceAtLeast(0.25f)
+                player.playbackParameters = PlaybackParameters(currentSpeed)
+                showHud("⚡", "${currentSpeed}x Speed")
+            }
+            "setAspect" -> {
+                currentAspect = strVal
+                playerView.resizeMode = when (strVal) {
+                    "cover" -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    "fill" -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                    else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                }
+                val label = when (strVal) {
+                    "cover" -> "Fill"
+                    "fill" -> "Stretch"
+                    else -> "Fit"
+                }
+                showHud("🔲", "Aspect: $label")
+            }
+            "stop" -> {
+                player.stop()
+                playerView.visibility = View.GONE
+                ambientContainer.visibility = View.VISIBLE
+                showHud("⏹", "Standby")
+            }
+            "menu" -> {
+                if (osdContainer.visibility == View.VISIBLE) {
+                    osdContainer.visibility = View.GONE
+                } else {
+                    showOsd()
+                }
+            }
+            "type", "typeAndEnter" -> {
+                showHud("⌨️", strVal)
+                if (strVal.startsWith("http://") || strVal.startsWith("https://")) {
+                    currentTitle = strVal
+                    osdTitle.text = currentTitle
+                    ambientContainer.visibility = View.GONE
+                    playerView.visibility = View.VISIBLE
+                    player.setMediaItem(MediaItem.fromUri(strVal))
+                    player.prepare()
+                    player.play()
+                }
+            }
         }
     }
 
+    private fun reportStatusToPhone() {
+        val host = phoneHost ?: return
+        try {
+            val player = exoPlayer ?: return
+            val isPlaying = player.isPlaying
+            val duration = if (player.duration > 0) player.duration / 1000.0 else 0.0
+            val current = if (player.currentPosition > 0) player.currentPosition / 1000.0 else 0.0
+            val statusStr = if (ambientContainer.visibility == View.VISIBLE) "idle"
+                else if (player.playbackState == Player.STATE_BUFFERING) "buffering"
+                else if (player.playbackState == Player.STATE_ENDED) "ended"
+                else if (isPlaying) "playing" else "paused"
+
+            val json = JSONObject().apply {
+                put("status", statusStr)
+                put("currentTime", current)
+                put("duration", duration)
+                put("volume", currentVolume.toDouble())
+                put("muted", isMuted)
+                put("playbackRate", currentSpeed.toDouble())
+                put("aspectRatio", currentAspect)
+                put("title", currentTitle)
+            }
+
+            val url = URL("http://$host:$phonePort/api/status")
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                doOutput = true
+                connectTimeout = 800
+                readTimeout = 800
+                setRequestProperty("Content-Type", "application/json")
+            }
+            val writer = OutputStreamWriter(conn.outputStream)
+            writer.write(json.toString())
+            writer.flush()
+            writer.close()
+            conn.responseCode
+            conn.disconnect()
+        } catch (_: Exception) {}
+    }
+
+    // Physical TV Remote Hardware Keys Handling
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (connected) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_CENTER,
-                KeyEvent.KEYCODE_ENTER,
-                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                    webView.evaluateJavascript("window.handleTvKey('toggle')", null)
+        when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_ENTER,
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                executeRemoteCommand("toggle", 0.0, "")
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                executeRemoteCommand("play", 0.0, "")
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                executeRemoteCommand("pause", 0.0, "")
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                executeRemoteCommand("seekRelative", -10.0, "")
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT,
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                executeRemoteCommand("seekRelative", 10.0, "")
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                executeRemoteCommand("volumeRelative", 0.05, "")
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                executeRemoteCommand("volumeRelative", -0.05, "")
+                return true
+            }
+            KeyEvent.KEYCODE_BACK,
+            KeyEvent.KEYCODE_MEDIA_STOP -> {
+                if (playerView.visibility == View.VISIBLE) {
+                    executeRemoteCommand("stop", 0.0, "")
                     return true
                 }
-                KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                    webView.evaluateJavascript("window.handleTvKey('play')", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                    webView.evaluateJavascript("window.handleTvKey('pause')", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_LEFT,
-                KeyEvent.KEYCODE_MEDIA_REWIND -> {
-                    webView.evaluateJavascript("window.handleTvKey('seek', -10)", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_RIGHT,
-                KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
-                    webView.evaluateJavascript("window.handleTvKey('seek', 10)", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_UP,
-                KeyEvent.KEYCODE_VOLUME_UP -> {
-                    webView.evaluateJavascript("window.handleTvKey('volume', 0.1)", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_DOWN,
-                KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                    webView.evaluateJavascript("window.handleTvKey('volume', -0.1)", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_MEDIA_STOP -> {
-                    webView.evaluateJavascript("window.handleTvKey('back')", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_BACK -> {
-                    webView.evaluateJavascript("window.handleTvKey('back')", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_MENU -> {
-                    webView.evaluateJavascript("window.handleTvKey('menu')", null)
-                    return true
-                }
+            }
+            KeyEvent.KEYCODE_MENU -> {
+                executeRemoteCommand("menu", 0.0, "")
+                return true
             }
         }
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onDestroy() {
+        isPolling = false
+        mainHandler.removeCallbacks(clockRunnable)
+        mainHandler.removeCallbacks(osdHideRunnable)
+        mainHandler.removeCallbacks(hudHideRunnable)
         try { discoveryListener?.let { nsdManager.stopServiceDiscovery(it) } } catch (_: Exception) {}
+        exoPlayer?.release()
+        exoPlayer = null
         super.onDestroy()
     }
 }
