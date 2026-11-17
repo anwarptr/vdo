@@ -2173,6 +2173,9 @@ fun DeviceConnectionCard() {
     val haptic = LocalHapticFeedback.current
     var ipInput by remember { mutableStateOf(DeviceRemote.host) }
     var showSetup by remember { mutableStateOf(DeviceRemote.host.isBlank()) }
+    LaunchedEffect(DeviceRemote.host) {
+        if (DeviceRemote.host.isNotBlank()) ipInput = DeviceRemote.host
+    }
     val status = DeviceRemote.status
 
     val accent = when (status) {
@@ -2222,7 +2225,7 @@ fun DeviceConnectionCard() {
                 OutlinedTextField(
                     value = ipInput,
                     onValueChange = { ipInput = it.trim() },
-                    label = { Text("TX3 IP address") },
+                    label = { Text("TX3 IP (found automatically)") },
                     placeholder = { Text("192.168.1.50") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -2252,7 +2255,7 @@ fun DeviceConnectionCard() {
                 OutlinedButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        DeviceRemote.scan(getLocalWifiIp(context))
+                        DeviceRemote.scan()
                     },
                     enabled = !DeviceRemote.scanning,
                     shape = RoundedCornerShape(12.dp),
@@ -2264,7 +2267,7 @@ fun DeviceConnectionCard() {
                         Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
                     Spacer(Modifier.width(6.dp))
-                    Text(if (DeviceRemote.scanning) "Searching…" else "Find TX3")
+                    Text(if (DeviceRemote.scanning) "Searching… ${(DeviceRemote.scanProgress * 100).toInt()}%" else "Search again")
                 }
                 if (status == "connected") {
                     TextButton(onClick = { DeviceRemote.disconnect() }) {
@@ -2278,23 +2281,30 @@ fun DeviceConnectionCard() {
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    DeviceRemote.found.forEach { ip ->
+                    DeviceRemote.found.forEach { dev ->
                         Surface(
                             onClick = {
-                                ipInput = ip
-                                DeviceRemote.connect(ip)
+                                ipInput = dev.ip
+                                if (dev.adbOpen) DeviceRemote.connect(dev.ip) else DeviceRemote.explainClosed(dev)
                             },
                             shape = RoundedCornerShape(10.dp),
                             color = GtvSurfaceVariant,
-                            border = BorderStroke(1.dp, if (ip == DeviceRemote.host) GtvPrimary else GtvBorder)
+                            border = BorderStroke(1.dp, if (dev.ip == DeviceRemote.host) GtvPrimary else GtvBorder)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.Tv, contentDescription = null, tint = GtvPrimary, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Default.Tv, contentDescription = null, tint = if (dev.adbOpen) GtvPrimary else GtvTextTertiary, modifier = Modifier.size(14.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text(ip, style = MaterialTheme.typography.labelMedium, color = GtvTextPrimary)
+                                Column {
+                                    Text(dev.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = if (dev.adbOpen) GtvTextPrimary else GtvTextSecondary)
+                                    Text(
+                                        if (dev.adbOpen) dev.ip else "${dev.ip} • debugging off",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (dev.adbOpen) GtvTextSecondary else GtvWarning
+                                    )
+                                }
                             }
                         }
                     }
@@ -2307,8 +2317,8 @@ fun DeviceConnectionCard() {
                 listOf(
                     "1. On the TX3 open Settings → Device Preferences → About and click \"Build\" 7 times until it says you are a developer.",
                     "2. Go back to Device Preferences → Developer options and turn on \"USB debugging\" (and \"Network/ADB debugging\" if your firmware shows it).",
-                    "3. Note the TX3's IP address from Settings → Network & Internet → your Wi-Fi (phone and TX3 must be on the same Wi-Fi).",
-                    "4. Enter the IP above (or tap Find TX3) and press Connect.",
+                    "3. Make sure the phone and the TX3 are on the same Wi-Fi network.",
+                    "4. Open TX3 Direct — the app searches the Wi-Fi and connects by itself (typing the IP is only a fallback).",
                     "5. The TV shows \"Allow USB debugging?\" — tick \"Always allow from this computer\" and press OK with the TX3's own remote. You only do this once.",
                     "If port 5555 stays closed, your firmware needs network ADB enabled once from a PC: connect by USB and run  adb tcpip 5555"
                 ).forEach { line ->
@@ -3110,6 +3120,8 @@ package com.example.lancast
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.runtime.getValue
@@ -3118,7 +3130,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.io.File
 import java.net.ConnectException
+import java.net.Inet4Address
+import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.NetworkInterface
 import java.net.NoRouteToHostException
 import java.net.Socket
 import java.net.SocketTimeoutException
@@ -3168,7 +3183,12 @@ object DeviceRemote {
         private set
     var scanning by mutableStateOf(false)
         private set
-    val found = mutableStateListOf<String>()
+    var scanProgress by mutableStateOf(0f)
+        private set
+    val found = mutableStateListOf<FoundDevice>()
+
+    /** A device seen on the LAN. [adbOpen] = its debugging port answers, so it can be controlled. */
+    data class FoundDevice(val ip: String, val name: String, val adbOpen: Boolean)
 
     val isDeviceMode: Boolean get() = mode == MODE_DEVICE
     val isConnected: Boolean get() = status == "connected"
@@ -3177,6 +3197,8 @@ object DeviceRemote {
     private val main = Handler(Looper.getMainLooper())
     private var prefs: SharedPreferences? = null
     private var keyDir: File? = null
+    private var appContext: Context? = null
+    @Volatile private var lastFailureWasNetwork = false
     private var keyPair: KeyPair? = null
     @Volatile private var client: AdbClient? = null
 
@@ -3185,30 +3207,41 @@ object DeviceRemote {
         val p = context.applicationContext.getSharedPreferences("device_remote", Context.MODE_PRIVATE)
         prefs = p
         keyDir = context.applicationContext.filesDir
+        appContext = context.applicationContext
         mode = p.getString("mode", MODE_VDO) ?: MODE_VDO
         host = p.getString("host", "") ?: ""
-        if (isDeviceMode && host.isNotBlank()) connect(host)
+        if (isDeviceMode) autoConnect()
+    }
+
+    /** Reconnects to the remembered box, or searches the network when there is none / it moved. */
+    private fun autoConnect() {
+        if (host.isNotBlank()) connect(host, rescanOnFail = true) else scan()
     }
 
     fun changeMode(newMode: String) {
         mode = newMode
         prefs?.edit()?.putString("mode", newMode)?.apply()
-        if (newMode == MODE_DEVICE && host.isNotBlank() && status != "connected" && status != "connecting" && status != "auth") {
-            connect(host)
+        if (newMode == MODE_DEVICE && !scanning && status != "connected" && status != "connecting" && status != "auth") {
+            autoConnect()
         }
     }
 
-    fun connect(target: String) {
+    fun connect(target: String, rescanOnFail: Boolean = false) {
         val h = target.trim()
         if (h.isEmpty()) {
-            message = "Enter the TX3's IP address (Settings → Network on the box)"
+            scan()
             return
         }
         host = h
         prefs?.edit()?.putString("host", h)?.apply()
         status = "connecting"
         message = "Connecting to $h…"
-        executor.execute { doConnect(h) }
+        executor.execute {
+            if (!doConnect(h) && rescanOnFail && lastFailureWasNetwork) {
+                // the box probably got a new IP from the router: look for it again
+                ui { scan() }
+            }
+        }
     }
 
     fun disconnect() {
@@ -3268,43 +3301,205 @@ object DeviceRemote {
         }
     }
 
-    /** Scans the phone's /24 subnet for hosts with ADB port 5555 open. */
-    fun scan(phoneIp: String) {
+    /** Tells the user why a discovered box can't be controlled yet. */
+    fun explainClosed(dev: FoundDevice) {
+        status = "error"
+        message = "${dev.name} (${dev.ip}) is on your Wi-Fi but its debugging port $ADB_PORT is closed. " +
+            "On the box enable Developer options → USB debugging (and Network/ADB debugging if listed), then tap Search again."
+    }
+
+    /** The phone's own IPv4 address and prefix length on Wi-Fi / Ethernet / hotspot. */
+    private fun localIpv4(): Pair<String, Int>? {
+        try {
+            val skip = listOf("rmnet", "ccmni", "tun", "ppp", "dummy", "p2p", "v4-", "clat", "ipsec")
+            val candidates = NetworkInterface.getNetworkInterfaces()?.toList().orEmpty()
+                .filter { ni -> ni.isUp && !ni.isLoopback && skip.none { ni.name.startsWith(it) } }
+                .flatMap { ni ->
+                    ni.interfaceAddresses
+                        .filter { it.address is Inet4Address && it.address.isSiteLocalAddress }
+                        .map { ni.name to it }
+                }
+                .sortedBy { (name, _) ->
+                    when {
+                        name.startsWith("wlan") -> 0
+                        name.startsWith("eth") -> 1
+                        name.startsWith("swlan") || name.startsWith("ap") -> 2
+                        else -> 3
+                    }
+                }
+            val best = candidates.firstOrNull()
+            if (best != null) return best.second.address.hostAddress!! to best.second.networkPrefixLength.toInt()
+        } catch (_: Exception) {
+        }
+        val ctx = appContext ?: return null
+        val legacy = getLocalWifiIp(ctx)
+        return if (legacy.contains('x')) null else legacy to 24
+    }
+
+    private fun ipToInt(ip: String): Int =
+        ip.split('.').fold(0) { acc, part -> (acc shl 8) or (part.toInt() and 0xFF) }
+
+    private fun intToIp(v: Int): String =
+        "${(v ushr 24) and 0xFF}.${(v ushr 16) and 0xFF}.${(v ushr 8) and 0xFF}.${v and 0xFF}"
+
+    /** All host addresses of the phone's subnet (capped at /22 = 1022 hosts; huge networks scan the local /24). */
+    private fun subnetHosts(ip: String, prefix: Int): List<String> {
+        val p = if (prefix < 22 || prefix > 30) 24 else prefix
+        val self = ipToInt(ip)
+        val mask = -1 shl (32 - p)
+        val network = self and mask
+        val broadcast = network or mask.inv()
+        return ((network + 1) until broadcast).filter { it != self }.map { intToIp(it) }
+    }
+
+    /**
+     * Finds TV boxes automatically: probes every address on the Wi-Fi subnet for the ADB port
+     * and, in parallel, listens for mDNS adverts (Android TV remote, Cast, wireless debugging)
+     * so boxes with debugging switched off can still be named and explained.
+     */
+    fun scan() {
         if (scanning) return
-        val prefix = phoneIp.substringBeforeLast('.', "")
-        if (prefix.isEmpty() || phoneIp.contains('x')) {
-            message = "Connect the phone to the same Wi-Fi as the TX3 first"
+        val local = localIpv4()
+        if (local == null) {
+            status = "error"
+            message = "The phone isn't on Wi-Fi. Connect it to the same Wi-Fi network as the TX3."
             return
         }
+        val (phoneIp, prefix) = local
+        val hosts = subnetHosts(phoneIp, prefix)
         scanning = true
+        scanProgress = 0f
         found.clear()
-        message = "Searching $prefix.* for a TV box with network ADB…"
+        if (status != "connected") status = "disconnected"
+        message = "Searching your Wi-Fi for the TX3…"
+
+        val named = java.util.concurrent.ConcurrentHashMap<String, String>()
+        val stopMdns = startMdnsDiscovery(named)
+
         Thread {
-            val pool = Executors.newFixedThreadPool(32)
+            val pool = Executors.newFixedThreadPool(64)
             val hits = java.util.Collections.synchronizedList(mutableListOf<String>())
-            for (i in 1..254) {
-                val ip = "$prefix.$i"
-                if (ip == phoneIp) continue
+            val done = java.util.concurrent.atomic.AtomicInteger(0)
+            for (ip in hosts) {
                 pool.execute {
-                    try {
-                        Socket().use { it.connect(InetSocketAddress(ip, ADB_PORT), 500) }
+                    if (probe(ip, 700) || probe(ip, 1200)) {
                         hits.add(ip)
-                        ui { if (ip !in found) found.add(ip) }
-                    } catch (_: Exception) {
+                        val name = named[ip] ?: reverseName(ip) ?: "Android TV box"
+                        ui { if (found.none { it.ip == ip }) found.add(FoundDevice(ip, name, true)) }
                     }
+                    val n = done.incrementAndGet()
+                    if (n % 16 == 0) ui { scanProgress = n.toFloat() / hosts.size }
                 }
             }
             pool.shutdown()
-            try { pool.awaitTermination(30, TimeUnit.SECONDS) } catch (_: Exception) {}
+            try { pool.awaitTermination(60, TimeUnit.SECONDS) } catch (_: Exception) {}
+            // give mDNS a moment to finish resolving before we stop it
+            try { Thread.sleep(1500) } catch (_: Exception) {}
+            stopMdns()
+            val closed = named.filterKeys { it !in hits }
+
             ui {
                 scanning = false
+                scanProgress = 1f
+                closed.forEach { (ip, name) ->
+                    if (found.none { it.ip == ip }) found.add(FoundDevice(ip, name, false))
+                }
+                val saved = host
                 when {
-                    hits.isEmpty() -> message = "No box with ADB on port $ADB_PORT found. Enable network/USB debugging on the TX3 (see Setup)."
                     hits.size == 1 && status != "connected" -> connect(hits[0])
-                    else -> message = "Found ${hits.size} device(s) — tap one to connect"
+                    hits.isNotEmpty() && saved in hits && status != "connected" -> connect(saved)
+                    hits.size > 1 -> {
+                        status = "disconnected"
+                        message = "Found ${hits.size} boxes — tap the TX3 below"
+                    }
+                    hits.isEmpty() && closed.isNotEmpty() -> explainClosed(found.first { !it.adbOpen })
+                    hits.isEmpty() -> {
+                        status = "error"
+                        message = "No TV box with debugging enabled on $phoneIp/$prefix. Make sure the TX3 is on the same Wi-Fi and USB debugging is on (see Setup), then tap Search again."
+                    }
                 }
             }
         }.start()
+    }
+
+    private fun probe(ip: String, timeoutMs: Int): Boolean = try {
+        Socket().use { it.connect(InetSocketAddress(ip, ADB_PORT), timeoutMs) }
+        true
+    } catch (_: Exception) {
+        false
+    }
+
+    private fun reverseName(ip: String): String? = try {
+        val n = InetAddress.getByName(ip).canonicalHostName
+        if (n == ip || n.isBlank()) null else n.substringBefore('.')
+    } catch (_: Exception) {
+        null
+    }
+
+    /** Collects ip → friendly name from mDNS. Returns a function that stops discovery. */
+    private fun startMdnsDiscovery(out: MutableMap<String, String>): () -> Unit {
+        val ctx = appContext ?: return {}
+        val nsd = ctx.getSystemService(Context.NSD_SERVICE) as? NsdManager ?: return {}
+        val types = listOf("_adb-tls-connect._tcp.", "_adb._tcp.", "_androidtvremote2._tcp.", "_googlecast._tcp.")
+        val listeners = mutableListOf<NsdManager.DiscoveryListener>()
+        val queue = java.util.concurrent.LinkedBlockingQueue<NsdServiceInfo>()
+        val resolving = java.util.concurrent.atomic.AtomicBoolean(false)
+
+        fun resolveNext() {
+            if (!resolving.compareAndSet(false, true)) return
+            val next = queue.poll()
+            if (next == null) {
+                resolving.set(false)
+                return
+            }
+            try {
+                @Suppress("DEPRECATION")
+                nsd.resolveService(next, object : NsdManager.ResolveListener {
+                    override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) {
+                        resolving.set(false)
+                        resolveNext()
+                    }
+                    override fun onServiceResolved(info: NsdServiceInfo) {
+                        @Suppress("DEPRECATION")
+                        val addr = info.host
+                        if (addr is Inet4Address) {
+                            val friendly = try {
+                                info.attributes["fn"]?.let { String(it) }
+                            } catch (_: Exception) { null }
+                            val name = (friendly ?: info.serviceName).take(32)
+                            val ip = addr.hostAddress
+                            if (ip != null) out.putIfAbsent(ip, name)
+                        }
+                        resolving.set(false)
+                        resolveNext()
+                    }
+                })
+            } catch (_: Exception) {
+                resolving.set(false)
+            }
+        }
+
+        for (type in types) {
+            val l = object : NsdManager.DiscoveryListener {
+                override fun onDiscoveryStarted(serviceType: String) {}
+                override fun onDiscoveryStopped(serviceType: String) {}
+                override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {}
+                override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
+                override fun onServiceLost(service: NsdServiceInfo) {}
+                override fun onServiceFound(service: NsdServiceInfo) {
+                    queue.offer(service)
+                    resolveNext()
+                }
+            }
+            try {
+                nsd.discoverServices(type, NsdManager.PROTOCOL_DNS_SD, l)
+                listeners.add(l)
+            } catch (_: Exception) {
+            }
+        }
+        return {
+            listeners.forEach { l -> try { nsd.stopServiceDiscovery(l) } catch (_: Exception) {} }
+        }
     }
 
     // Runs on the executor thread.
@@ -3314,6 +3509,7 @@ object DeviceRemote {
             status = "connecting"
             message = "Connecting to $h:$port…"
         }
+        lastFailureWasNetwork = false
         try {
             val kp = keyPair ?: AdbClient.loadOrCreateKeyPair(keyDir ?: throw IllegalStateException("Not initialised")).also { keyPair = it }
             client?.close()
@@ -3342,8 +3538,10 @@ object DeviceRemote {
         } catch (e: SocketTimeoutException) {
             fail("No approval received. Accept the \"Allow USB debugging?\" prompt on the TV, then tap Connect again")
         } catch (e: ConnectException) {
+            lastFailureWasNetwork = true
             fail("$h refused port $port. Turn on network ADB / USB debugging on the TX3 (see Setup)")
         } catch (e: NoRouteToHostException) {
+            lastFailureWasNetwork = true
             fail("Can't reach $h — is the phone on the same Wi-Fi as the TX3?")
         } catch (e: Exception) {
             fail("Couldn't connect to $h: ${e.message ?: e.javaClass.simpleName}")
