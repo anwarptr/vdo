@@ -266,14 +266,15 @@ import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.IBinder
+import android.os.ParcelFileDescriptor
 import android.os.PowerManager
+import android.provider.OpenableColumns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.app.NotificationCompat
 import fi.iki.elonen.NanoHTTPD
 import org.json.JSONObject
-import java.io.FileInputStream
 import java.util.concurrent.atomic.AtomicInteger
 
 data class TvPlaybackState(
@@ -323,6 +324,9 @@ class CastServerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.data?.let { uri ->
+            currentVideoUri = uri
+        }
         when (intent?.action) {
             "ACTION_TOGGLE" -> pushCommand("toggle")
             "ACTION_REWIND" -> pushCommand("seekRelative", -15.0)
@@ -465,9 +469,8 @@ class CastServerService : Service() {
         }
 
         private fun streamCurrentVideo(session: IHTTPSession): Response {
-            val uri = currentVideoUri ?: return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "No video")
-            
-            // Normalize MIME type so audio stream is always correctly recognized
+            val uri = currentVideoUri ?: return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "No video selected")
+
             var mime = contentResolver.getType(uri)
             if (mime.isNullOrBlank() || mime == "video/*" || mime == "application/octet-stream") {
                 val ext = uri.path?.substringAfterLast('.', "")?.lowercase()
@@ -482,29 +485,47 @@ class CastServerService : Service() {
                 }
             }
 
-            val pfd = contentResolver.openFileDescriptor(uri, "r")
-                ?: return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Cannot open")
+            val pfd = try {
+                contentResolver.openFileDescriptor(uri, "r")
+            } catch (e: Exception) {
+                null
+            } ?: return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Cannot open video file")
 
-            val fileSize = pfd.statSize
+            var fileSize = pfd.statSize
+            if (fileSize <= 0) {
+                try {
+                    contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            val sizeIdx = cursor.getColumnIndex(OpenableColumns.SIZE)
+                            if (sizeIdx != -1) fileSize = cursor.getLong(sizeIdx)
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+
             val rangeHeader = session.headers["range"]
 
             return if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
                 val parts = rangeHeader.removePrefix("bytes=").split("-")
                 val start = parts[0].toLongOrNull() ?: 0L
-                val end = if (parts.size > 1 && parts[1].isNotEmpty()) parts[1].toLong() else fileSize - 1
+                val end = if (parts.size > 1 && parts[1].isNotEmpty()) parts[1].toLong() else (if (fileSize > 0) fileSize - 1 else start + 1024 * 1024)
                 val length = (end - start) + 1
-                val fis = FileInputStream(pfd.fileDescriptor)
-                fis.channel.position(start)
+                val fis = ParcelFileDescriptor.AutoCloseInputStream(pfd)
+                try {
+                    fis.channel.position(start)
+                } catch (_: Exception) {
+                    try { fis.skip(start) } catch (_: Exception) {}
+                }
                 newFixedLengthResponse(Response.Status.PARTIAL_CONTENT, mime, fis, length).apply {
                     addHeader("Accept-Ranges", "bytes")
-                    addHeader("Content-Range", "bytes $start-$end/$fileSize")
-                    addHeader("Content-Length", length.toString())
+                    addHeader("Content-Range", "bytes $start-$end/${if (fileSize > 0) fileSize.toString() else "*"}")
+                    // NanoHTTPD automatically adds Content-Length from length; avoid duplicate headers
                 }
             } else {
-                val fis = FileInputStream(pfd.fileDescriptor)
-                newFixedLengthResponse(Response.Status.OK, mime, fis, fileSize).apply {
+                val fis = ParcelFileDescriptor.AutoCloseInputStream(pfd)
+                newFixedLengthResponse(Response.Status.OK, mime, fis, if (fileSize > 0) fileSize else -1).apply {
                     addHeader("Accept-Ranges", "bytes")
-                    addHeader("Content-Length", fileSize.toString())
+                    // NanoHTTPD automatically adds Content-Length from fileSize; avoid duplicate headers
                 }
             }
         }
@@ -603,7 +624,7 @@ class CastServerService : Service() {
           </div>
 
           <!-- Video Element -->
-          <video id="v" playsinline></video>
+          <video id="v" playsinline preload="auto"></video>
 
           <!-- OSD Overlay -->
           <div id="osd">
@@ -654,10 +675,6 @@ class CastServerService : Service() {
           let osdTimer = null;
           let hudTimer = null;
           let isMutedByCommand = false;
-
-          // Explicitly ensure audio is unmuted and enabled
-          v.muted = false;
-          v.volume = 1.0;
 
           function ensureAudioEnabled() {
             if (v.muted && !isMutedByCommand) {
@@ -721,6 +738,12 @@ class CastServerService : Service() {
             } catch(e) {}
           }
 
+          v.addEventListener('error', function() {
+            const code = v.error ? v.error.code : 0;
+            showHud('⚠️', 'Playback error (Code ' + code + ')');
+            reportStatus();
+          });
+
           v.addEventListener('timeupdate', () => {
             if (v.duration) {
               const pct = (v.currentTime / v.duration) * 100;
@@ -763,9 +786,11 @@ class CastServerService : Service() {
                 osdTitle.innerText = currentTitle;
                 ambient.style.display = 'none';
                 v.style.display = 'block';
+
+                v.pause();
                 v.src = '/stream?t=' + s.seq;
+                v.load();
                 
-                // Force unmuted audio on new playback
                 isMutedByCommand = false;
                 v.muted = false;
                 v.volume = 1.0;
@@ -774,23 +799,37 @@ class CastServerService : Service() {
                 if (playPromise !== undefined) {
                   playPromise.then(() => {
                     v.muted = false;
-                  }).catch(() => {
-                    v.muted = false;
-                    v.play().catch(()=>{});
+                  }).catch((err) => {
+                    // If unmuted autoplay blocked, start muted then unmute immediately
+                    v.muted = true;
+                    v.play().then(() => {
+                      setTimeout(() => { v.muted = false; }, 200);
+                    }).catch(()=>{});
                   });
                 }
                 showHud('▶', 'Playing');
               } else if (s.cmd === 'play') {
                 ensureAudioEnabled();
-                v.play().catch(()=>{});
+                v.play().catch(() => {
+                  v.muted = true;
+                  v.play().then(() => { v.muted = false; }).catch(()=>{});
+                });
                 showHud('▶', 'Play');
               } else if (s.cmd === 'pause') {
                 v.pause();
                 showHud('⏸', 'Paused');
               } else if (s.cmd === 'toggle') {
                 ensureAudioEnabled();
-                if (v.paused) { v.play().catch(()=>{}); showHud('▶', 'Play'); }
-                else { v.pause(); showHud('⏸', 'Paused'); }
+                if (v.paused) {
+                  v.play().catch(() => {
+                    v.muted = true;
+                    v.play().then(() => { v.muted = false; }).catch(()=>{});
+                  });
+                  showHud('▶', 'Play');
+                } else {
+                  v.pause();
+                  showHud('⏸', 'Paused');
+                }
               } else if (s.cmd === 'seekRelative') {
                 ensureAudioEnabled();
                 v.currentTime = Math.max(0, Math.min(v.duration || 999999, v.currentTime + (s.val || 0)));
@@ -837,12 +876,25 @@ class CastServerService : Service() {
           window.handleTvKey = function(action, val) {
             ensureAudioEnabled();
             if (action === 'toggle') {
-              if (v.paused) { v.play().catch(()=>{}); showHud('▶', 'Play'); }
-              else { v.pause(); showHud('⏸', 'Paused'); }
+              if (v.paused) {
+                v.play().catch(() => {
+                  v.muted = true;
+                  v.play().then(() => { v.muted = false; }).catch(()=>{});
+                });
+                showHud('▶', 'Play');
+              } else {
+                v.pause();
+                showHud('⏸', 'Paused');
+              }
             } else if (action === 'play') {
-              v.play().catch(()=>{}); showHud('▶', 'Play');
+              v.play().catch(() => {
+                v.muted = true;
+                v.play().then(() => { v.muted = false; }).catch(()=>{});
+              });
+              showHud('▶', 'Play');
             } else if (action === 'pause') {
-              v.pause(); showHud('⏸', 'Paused');
+              v.pause();
+              showHud('⏸', 'Paused');
             } else if (action === 'seek') {
               v.currentTime = Math.max(0, Math.min(v.duration || 999999, v.currentTime + (val || 0)));
               showHud(val >= 0 ? '⏩' : '⏪', (val >= 0 ? '+' : '') + val + 's');
@@ -929,6 +981,17 @@ class MainActivity : ComponentActivity() {
         } else null
 
         if (sharedUri != null) {
+            try {
+                grantUriPermission(packageName, sharedUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
+
+            val sendIntent = Intent(this, CastServerService::class.java).apply {
+                data = sharedUri
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(sendIntent)
+            else startService(sendIntent)
+
             CastServerService.currentVideoUri = sharedUri
             CastServerService.currentVideoTitle = getVideoName(this, sharedUri)
             CastServerService.pushCommand("load", 0.0, CastServerService.currentVideoTitle)
@@ -1012,6 +1075,23 @@ fun VdoRemoteScreen(initialUri: Uri?) {
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
+            try {
+                context.grantUriPermission(context.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
+            try {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
+
+            val serviceIntent = Intent(context, CastServerService::class.java).apply {
+                data = uri
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+
             selectedUri = uri
             CastServerService.currentVideoUri = uri
             val title = getVideoName(context, uri)
@@ -1771,6 +1851,8 @@ class TvReceiverActivity : Activity() {
                 mediaPlaybackRequiresUserGesture = false
                 domStorageEnabled = true
                 databaseEnabled = true
+                allowFileAccess = true
+                allowContentAccess = true
                 setSupportZoom(false)
                 loadWithOverviewMode = true
                 useWideViewPort = true
