@@ -2392,6 +2392,7 @@ cat << 'EOF' > tv/src/main/res/xml/method.xml
 EOF
 
 cat << 'EOF' > tv/src/main/java/com/example/lancasttv/TvReceiverActivity.kt
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
 package com.example.lancasttv
 
 import android.annotation.SuppressLint
@@ -2406,6 +2407,7 @@ import android.net.nsd.NsdServiceInfo
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
@@ -2416,10 +2418,17 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.audio.AudioRendererEventListener
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import androidx.media3.exoplayer.video.VideoRendererEventListener
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import org.json.JSONObject
@@ -2429,8 +2438,77 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
+import java.util.ArrayList
 import java.util.Date
 import java.util.Locale
+
+class SafeRenderersFactory(context: Context) : DefaultRenderersFactory(context) {
+    init {
+        setEnableDecoderFallback(true)
+    }
+
+    override fun buildVideoRenderers(
+        context: Context,
+        extensionRendererMode: Int,
+        mediaCodecSelector: MediaCodecSelector,
+        enableDecoderFallback: Boolean,
+        eventHandler: Handler,
+        eventListener: VideoRendererEventListener,
+        allowedVideoJoiningTimeMs: Long,
+        out: ArrayList<Renderer>
+    ) {
+        // Always use hardware MediaCodec video decoders.
+        // Never load ExperimentalFfmpegVideoRenderer to avoid native crashes on movies.
+        super.buildVideoRenderers(
+            context,
+            EXTENSION_RENDERER_MODE_OFF,
+            mediaCodecSelector,
+            enableDecoderFallback,
+            eventHandler,
+            eventListener,
+            allowedVideoJoiningTimeMs,
+            out
+        )
+    }
+
+    override fun buildAudioRenderers(
+        context: Context,
+        extensionRendererMode: Int,
+        mediaCodecSelector: MediaCodecSelector,
+        enableDecoderFallback: Boolean,
+        audioSink: AudioSink,
+        eventHandler: Handler,
+        eventListener: AudioRendererEventListener,
+        out: ArrayList<Renderer>
+    ) {
+        // 1. Hardware MediaCodec audio renderers (AAC, MP3, hardware AC3)
+        super.buildAudioRenderers(
+            context,
+            EXTENSION_RENDERER_MODE_OFF,
+            mediaCodecSelector,
+            enableDecoderFallback,
+            audioSink,
+            eventHandler,
+            eventListener,
+            out
+        )
+
+        // 2. FFmpeg audio renderer fallback for software decoding of AC3 / E-AC3 / DTS
+        try {
+            val clazz = Class.forName("androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer")
+            val constructor = clazz.getConstructor(
+                Handler::class.java,
+                AudioRendererEventListener::class.java,
+                AudioSink::class.java
+            )
+            val renderer = constructor.newInstance(eventHandler, eventListener, audioSink) as Renderer
+            out.add(renderer)
+            Log.i("VdoTv", "FFmpeg audio renderer successfully loaded for AC3/DTS software fallback")
+        } catch (e: Throwable) {
+            Log.w("VdoTv", "FFmpeg audio renderer not available: ${e.message}")
+        }
+    }
+}
 
 class TvReceiverActivity : Activity() {
 
@@ -2464,6 +2542,13 @@ class TvReceiverActivity : Activity() {
     private var currentSpeed = 1.0f
     private var currentAspect = "contain"
 
+    // Thread-safe telemetry states updated on UI thread and read by reporting thread
+    @Volatile private var isPlayerActive = false
+    @Volatile private var isPlaybackPlaying = false
+    @Volatile private var playerPlaybackState = Player.STATE_IDLE
+    @Volatile private var currentPlaybackPosition = 0L
+    @Volatile private var currentPlaybackDuration = 0L
+
     private val clockRunnable = object : Runnable {
         override fun run() {
             updateClock()
@@ -2483,6 +2568,10 @@ class TvReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            Log.e("VdoTv", "Uncaught exception on thread ${thread.name}", throwable)
+        }
+
         // Route hardware volume keys to media stream and request audio focus
         volumeControlStream = AudioManager.STREAM_MUSIC
         requestMediaAudioFocus()
@@ -2501,7 +2590,7 @@ class TvReceiverActivity : Activity() {
 
         val root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
 
-        // 1. Native ExoPlayer View (Hardware AC3/EAC3/AAC/DTS decoding)
+        // 1. Native ExoPlayer View with safe hardware video & FFmpeg audio decoders
         playerView = PlayerView(this).apply {
             layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             useController = false
@@ -2510,13 +2599,11 @@ class TvReceiverActivity : Activity() {
         }
         root.addView(playerView)
 
-        val renderersFactory = DefaultRenderersFactory(this).apply {
-            setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
-            setEnableDecoderFallback(true)
-        }
+        val renderersFactory = SafeRenderersFactory(this)
         exoPlayer = ExoPlayer.Builder(this, renderersFactory).build().apply {
             addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
+                    playerPlaybackState = playbackState
                     if (playbackState == Player.STATE_ENDED) {
                         showHud("⏹", "Playback Ended")
                     }
@@ -2524,7 +2611,13 @@ class TvReceiverActivity : Activity() {
                 }
 
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    isPlaybackPlaying = isPlaying
                     updateOsdProgress()
+                }
+
+                override fun onPlayerError(error: PlaybackException) {
+                    Log.e("VdoTv", "ExoPlayer playback error: ${error.errorCodeName}", error)
+                    showHud("⚠️", error.localizedMessage ?: "Playback Error")
                 }
             })
         }
@@ -2663,6 +2756,11 @@ class TvReceiverActivity : Activity() {
 
     private fun updateOsdProgress() {
         val player = exoPlayer ?: return
+        isPlaybackPlaying = player.isPlaying
+        playerPlaybackState = player.playbackState
+        currentPlaybackPosition = player.currentPosition
+        currentPlaybackDuration = player.duration
+
         if (playerView.visibility == View.VISIBLE && player.duration > 0) {
             val progress = ((player.currentPosition.toDouble() / player.duration) * 1000).toInt()
             osdProgressBar.progress = progress
@@ -2691,6 +2789,10 @@ class TvReceiverActivity : Activity() {
         val m = totalSec / 60
         val s = totalSec % 60
         return String.format(Locale.US, "%02d:%02d", m, s)
+    }
+
+    private fun formatHost(host: String): String {
+        return if (host.contains(":") && !host.startsWith("[")) "[$host]" else host
     }
 
     private fun startDiscovery() {
@@ -2741,7 +2843,7 @@ class TvReceiverActivity : Activity() {
                 val host = phoneHost
                 if (host != null) {
                     try {
-                        val url = URL("http://$host:$phonePort/api/state")
+                        val url = URL("http://${formatHost(host)}:$phonePort/api/state")
                         val conn = (url.openConnection() as HttpURLConnection).apply {
                             connectTimeout = 1000
                             readTimeout = 1000
@@ -2767,7 +2869,7 @@ class TvReceiverActivity : Activity() {
             }
         }.start()
 
-        // Telemetry Reporting Thread (every 500ms)
+        // Telemetry Reporting Thread (every 500ms) - only reads volatile variables
         Thread {
             while (isPolling) {
                 reportStatusToPhone()
@@ -2778,122 +2880,134 @@ class TvReceiverActivity : Activity() {
 
     private fun executeRemoteCommand(cmd: String, value: Double, strVal: String) {
         val player = exoPlayer ?: return
-        when (cmd) {
-            "load" -> {
-                currentTitle = if (strVal.isNotEmpty()) strVal else "Playing Video"
-                osdTitle.text = currentTitle
-                ambientContainer.visibility = View.GONE
-                playerView.visibility = View.VISIBLE
-
-                val streamUrl = "http://$phoneHost:$phonePort/stream?t=$lastSeq"
-                val mediaItem = MediaItem.fromUri(streamUrl)
-                player.setMediaItem(mediaItem)
-                player.prepare()
-                player.play()
-                showHud("▶", "Playing")
-            }
-            "play" -> {
-                player.play()
-                showHud("▶", "Play")
-            }
-            "pause" -> {
-                player.pause()
-                showHud("⏸", "Paused")
-            }
-            "toggle" -> {
-                if (player.isPlaying) {
-                    player.pause()
-                    showHud("⏸", "Paused")
-                } else {
-                    player.play()
-                    showHud("▶", "Play")
-                }
-            }
-            "seekRelative" -> {
-                val newPos = maxOf(0L, minOf(player.duration, player.currentPosition + (value * 1000).toLong()))
-                player.seekTo(newPos)
-                val sign = if (value >= 0) "+" else ""
-                showHud(if (value >= 0) "⏩" else "⏪", "$sign${value.toInt()}s (${formatTime(newPos)})")
-            }
-            "seekAbsolute" -> {
-                val newPos = (value * 1000).toLong()
-                player.seekTo(newPos)
-                showHud("⏩", formatTime(newPos))
-            }
-            "setVolume" -> {
-                currentVolume = value.toFloat().coerceIn(0f, 1f)
-                isMuted = false
-                player.volume = currentVolume
-                showHud("🔊", "${(currentVolume * 100).toInt()}%")
-            }
-            "volumeRelative" -> {
-                currentVolume = (currentVolume + value.toFloat()).coerceIn(0f, 1f)
-                isMuted = false
-                player.volume = currentVolume
-                showHud("🔊", "${(currentVolume * 100).toInt()}%")
-            }
-            "mute" -> {
-                isMuted = !isMuted
-                player.volume = if (isMuted) 0f else currentVolume
-                showHud(if (isMuted) "🔇" else "🔊", if (isMuted) "Muted" else "${(currentVolume * 100).toInt()}%")
-            }
-            "setSpeed" -> {
-                currentSpeed = value.toFloat().coerceAtLeast(0.25f)
-                player.playbackParameters = PlaybackParameters(currentSpeed)
-                showHud("⚡", "${currentSpeed}x Speed")
-            }
-            "setAspect" -> {
-                currentAspect = strVal
-                playerView.resizeMode = when (strVal) {
-                    "cover" -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                    "fill" -> AspectRatioFrameLayout.RESIZE_MODE_FILL
-                    else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
-                }
-                val label = when (strVal) {
-                    "cover" -> "Fill"
-                    "fill" -> "Stretch"
-                    else -> "Fit"
-                }
-                showHud("🔲", "Aspect: $label")
-            }
-            "stop" -> {
-                player.stop()
-                playerView.visibility = View.GONE
-                ambientContainer.visibility = View.VISIBLE
-                showHud("⏹", "Standby")
-            }
-            "menu" -> {
-                if (osdContainer.visibility == View.VISIBLE) {
-                    osdContainer.visibility = View.GONE
-                } else {
-                    showOsd()
-                }
-            }
-            "type", "typeAndEnter" -> {
-                showHud("⌨️", strVal)
-                if (strVal.startsWith("http://") || strVal.startsWith("https://")) {
-                    currentTitle = strVal
+        try {
+            when (cmd) {
+                "load" -> {
+                    currentTitle = if (strVal.isNotEmpty()) strVal else "Playing Video"
                     osdTitle.text = currentTitle
                     ambientContainer.visibility = View.GONE
                     playerView.visibility = View.VISIBLE
-                    player.setMediaItem(MediaItem.fromUri(strVal))
+                    isPlayerActive = true
+
+                    val host = phoneHost ?: return
+                    val streamUrl = "http://${formatHost(host)}:$phonePort/stream?t=$lastSeq"
+                    val mediaItem = MediaItem.fromUri(streamUrl)
+                    player.setMediaItem(mediaItem)
                     player.prepare()
                     player.play()
+                    showHud("▶", "Playing")
+                }
+                "play" -> {
+                    player.play()
+                    showHud("▶", "Play")
+                }
+                "pause" -> {
+                    player.pause()
+                    showHud("⏸", "Paused")
+                }
+                "toggle" -> {
+                    if (player.isPlaying) {
+                        player.pause()
+                        showHud("⏸", "Paused")
+                    } else {
+                        player.play()
+                        showHud("▶", "Play")
+                    }
+                }
+                "seekRelative" -> {
+                    val newPos = maxOf(0L, minOf(player.duration, player.currentPosition + (value * 1000).toLong()))
+                    player.seekTo(newPos)
+                    val sign = if (value >= 0) "+" else ""
+                    showHud(if (value >= 0) "⏩" else "⏪", "$sign${value.toInt()}s (${formatTime(newPos)})")
+                }
+                "seekAbsolute" -> {
+                    val newPos = (value * 1000).toLong()
+                    player.seekTo(newPos)
+                    showHud("⏩", formatTime(newPos))
+                }
+                "setVolume" -> {
+                    currentVolume = value.toFloat().coerceIn(0f, 1f)
+                    isMuted = false
+                    player.volume = currentVolume
+                    showHud("🔊", "${(currentVolume * 100).toInt()}%")
+                }
+                "volumeRelative" -> {
+                    currentVolume = (currentVolume + value.toFloat()).coerceIn(0f, 1f)
+                    isMuted = false
+                    player.volume = currentVolume
+                    showHud("🔊", "${(currentVolume * 100).toInt()}%")
+                }
+                "mute" -> {
+                    isMuted = !isMuted
+                    player.volume = if (isMuted) 0f else currentVolume
+                    showHud(if (isMuted) "🔇" else "🔊", if (isMuted) "Muted" else "${(currentVolume * 100).toInt()}%")
+                }
+                "setSpeed" -> {
+                    currentSpeed = value.toFloat().coerceAtLeast(0.25f)
+                    player.playbackParameters = PlaybackParameters(currentSpeed)
+                    showHud("⚡", "${currentSpeed}x Speed")
+                }
+                "setAspect" -> {
+                    currentAspect = strVal
+                    playerView.resizeMode = when (strVal) {
+                        "cover" -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                        "fill" -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                        else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    }
+                    val label = when (strVal) {
+                        "cover" -> "Fill"
+                        "fill" -> "Stretch"
+                        else -> "Fit"
+                    }
+                    showHud("🔲", "Aspect: $label")
+                }
+                "stop" -> {
+                    isPlayerActive = false
+                    player.stop()
+                    playerView.visibility = View.GONE
+                    ambientContainer.visibility = View.VISIBLE
+                    showHud("⏹", "Standby")
+                }
+                "menu" -> {
+                    if (osdContainer.visibility == View.VISIBLE) {
+                        osdContainer.visibility = View.GONE
+                    } else {
+                        showOsd()
+                    }
+                }
+                "type", "typeAndEnter" -> {
+                    showHud("⌨️", strVal)
+                    if (strVal.startsWith("http://") || strVal.startsWith("https://")) {
+                        currentTitle = strVal
+                        osdTitle.text = currentTitle
+                        ambientContainer.visibility = View.GONE
+                        playerView.visibility = View.VISIBLE
+                        isPlayerActive = true
+                        player.setMediaItem(MediaItem.fromUri(strVal))
+                        player.prepare()
+                        player.play()
+                    }
                 }
             }
+        } catch (e: Throwable) {
+            Log.e("VdoTv", "Error in executeRemoteCommand($cmd): ${e.message}", e)
+            showHud("⚠️", e.message ?: "Playback Error")
         }
     }
 
     private fun reportStatusToPhone() {
         val host = phoneHost ?: return
         try {
-            val player = exoPlayer ?: return
-            val isPlaying = player.isPlaying
-            val duration = if (player.duration > 0) player.duration / 1000.0 else 0.0
-            val current = if (player.currentPosition > 0) player.currentPosition / 1000.0 else 0.0
-            val statusStr = if (ambientContainer.visibility == View.VISIBLE) "idle"
-                else if (player.playbackState == Player.STATE_BUFFERING) "buffering"
-                else if (player.playbackState == Player.STATE_ENDED) "ended"
+            val isPlaying = isPlaybackPlaying
+            val dur = currentPlaybackDuration
+            val pos = currentPlaybackPosition
+            val pState = playerPlaybackState
+
+            val duration = if (dur > 0) dur / 1000.0 else 0.0
+            val current = if (pos > 0) pos / 1000.0 else 0.0
+            val statusStr = if (!isPlayerActive) "idle"
+                else if (pState == Player.STATE_BUFFERING) "buffering"
+                else if (pState == Player.STATE_ENDED) "ended"
                 else if (isPlaying) "playing" else "paused"
 
             val json = JSONObject().apply {
@@ -2907,7 +3021,7 @@ class TvReceiverActivity : Activity() {
                 put("title", currentTitle)
             }
 
-            val url = URL("http://$host:$phonePort/api/status")
+            val url = URL("http://${formatHost(host)}:$phonePort/api/status")
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 doOutput = true
@@ -2987,6 +3101,7 @@ class TvReceiverActivity : Activity() {
         super.onDestroy()
     }
 }
+
 EOF
 
 cat << 'EOF' > tv/src/main/java/com/example/lancasttv/VdoRemoteImeService.kt
