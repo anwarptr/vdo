@@ -19,8 +19,8 @@ bash build.sh          # generates project, signs, and runs: ./gradlew :app:asse
 Requirements: JDK 17, Android SDK, and a system `gradle` on PATH (the script generates a release keystore and runs `gradle wrapper --gradle-version 8.7` to bootstrap the wrapper). After a first run you can iterate with `./gradlew :app:assembleRelease` or `./gradlew :tv:assembleRelease`, but remember that edits to generated files are lost on the next `build.sh`.
 
 Outputs:
-- `app/build/outputs/apk/release/vdo-remote-release.apk` (and `app-release.apk`)
-- `tv/build/outputs/apk/release/vdo-tv-release.apk` (and `tv-release.apk`)
+- `app/build/outputs/apk/release/vdo-remote-release.apk`
+- `tv/build/outputs/apk/release/vdo-tv-release.apk`
 
 CI (`.github/workflows/build-apk.yml`) runs `bash build.sh` on every push and uploads both Release APKs as the `VDOCast-Release-APKs` artifact. There are no tests or lint configured.
 
@@ -31,16 +31,20 @@ Toolchain pins (in the root `build.gradle.kts` heredoc): AGP 8.5.2, Kotlin 1.9.2
 Two Android apps in one Gradle project (`rootProject.name = "VDOCastSuite"`):
 
 ### 1. `:app` — VDO Remote (`com.example.lancast`, minSdk 24, Jetpack Compose)
-- **Role**: Full-featured mobile TV remote controller & LAN video streaming server.
-- **Branding & Assets**: Custom adaptive vector launcher icon (`ic_launcher.xml`, smartphone remote with electric cyan `#00E5FF` & violet `#8B5CF6` waves), labeled `VDO Remote`.
+- **Role**: Full-featured mobile TV remote controller & LAN video streaming server with Google TV Soft palette (`#0F131C` velvet slate, `#8AB4F8` periwinkle).
+- **Branding & Assets**: Custom adaptive vector launcher icon (`ic_launcher.xml`, smartphone remote in Google TV periwinkle & velvet slate), labeled `VDO Remote`.
 - **UI & Controls (`MainActivity.kt`)**:
   - Live Now Playing card with real-time drag-and-seek timeline scrubber (synchronized with TV).
   - Primary media transport cluster (Play/Pause hero button, Skip ±10s, Skip ±30s).
-  - Tactile TV D-Pad navigation section (Up, Down, Left, Right, OK, TV Standby, TV Menu).
+  - **Feature 1: Navigation Cluster**: `🏠 Home` (returns TV to launcher), `↩ Back` (exits menus/popups or returns video to standby), `☰ Menu` (TV OSD), `⚡ Standby` (standby mode).
+  - **Feature 2: Dual Controller Modes**: Mode toggle pill between `🔘 D-Pad Wheel` and `👆 Swipe Trackpad` (horizontal swipe seeking, vertical swipe volume, tap to Play/Pause).
+  - **Feature 4: Voice Dictation & Search**: Phone speech-to-text button (`🎙️`) using `RecognizerIntent` sending queries straight to TV search fields or `VdoRemoteImeService`.
+  - Type on TV keyboard dialog with voice dictation and direct query dispatch.
+  - Hardware-style dual rocker capsules (Volume +/− & Seek ±15s).
   - Volume control card (smooth linear slider + mute toggle with active state indicator).
   - Quick action chips: playback speed (0.75x, 1.0x, 1.25x, 1.5x, 2.0x) and aspect ratio (Fit, Fill, Stretch).
   - Network info modal showing phone's Wi-Fi IP and direct connect guidance.
-  - Haptic feedback on all remote button taps.
+  - Haptic feedback on all remote button taps and gesture swipes.
 - **Service (`CastServerService.kt`)**:
   - Starts as a foreground media playback service with notification transport controls (Play/Pause, Rewind, FastForward, Stop).
   - Keeps Wi-Fi MulticastLock and WakeLock so casting never drops when screen turns off.

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VDO Remote — Feature & Icon Prototype Studio</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Touchpad Grid Animation */
+    .touchpad-grid {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(138, 180, 248, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(138, 180, 248, 0.05) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="bg-[#0A0D14] text-slate-100 min-h-screen p-4 md:p-8 flex flex-col items-center">
+
+  <div class="max-w-6xl w-full">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#8AB4F8]/10 text-[#8AB4F8] border border-[#8AB4F8]/25 mb-3">
+        🎮 Interactive Prototype & Feature Selector
+      </div>
+      <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight text-white">VDO TV Remote Next-Gen Prototype</h1>
+      <p class="text-slate-400 text-sm mt-1 max-w-xl mx-auto">
+        Toggle the proposed features below to see them appear live in the Google TV remote mockup. Test the buttons and gesture pad directly!
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT: Feature Toggle Checklist & Icon Concepts (5 cols) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- SECTION 1: Features to Add -->
+        <div class="bg-[#121622] border border-[#283248] rounded-2xl p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-[#8AB4F8] flex items-center gap-2">
+              <span>🎛️</span> Remote TV Features
+            </h2>
+            <span class="text-[11px] font-mono text-slate-400">Click to preview live</span>
+          </div>
+
+          <div class="space-y-3">
+            <!-- Feature 1: Home & Back Navigation Cluster -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-[#283248] bg-[#181D2A] cursor-pointer hover:border-[#8AB4F8]/50 transition-all">
+              <input type="checkbox" id="toggle-nav" checked onchange="updateFeatures()" class="mt-1 w-4 h-4 rounded text-[#8AB4F8] focus:ring-0 accent-[#8AB4F8]" />
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>🏠</span> Home & Back Navigation Cluster
+                  </span>
+                  <span class="text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded border border-emerald-500/20">Recommended</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Dedicated Home, Back, Menu & Standby cluster to control the TV OS seamlessly.</p>
+              </div>
+            </label>
+
+            <!-- Feature 2: Trackpad Gesture Mode -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-[#283248] bg-[#181D2A] cursor-pointer hover:border-[#8AB4F8]/50 transition-all">
+              <input type="checkbox" id="toggle-trackpad" checked onchange="updateFeatures()" class="mt-1 w-4 h-4 rounded text-[#8AB4F8] focus:ring-0 accent-[#8AB4F8]" />
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>👆</span> Trackpad / D-Pad Mode Toggle
+                  </span>
+                  <span class="text-[10px] bg-blue-500/10 text-[#8AB4F8] font-semibold px-2 py-0.5 rounded border border-blue-500/20">Touch Gestures</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Switch between traditional D-pad directional arrows and a smooth Apple-style swipe trackpad.</p>
+              </div>
+            </label>
+
+            <!-- Feature 3: App Quick Launchers -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-[#283248] bg-[#181D2A] cursor-pointer hover:border-[#8AB4F8]/50 transition-all">
+              <input type="checkbox" id="toggle-apps" checked onchange="updateFeatures()" class="mt-1 w-4 h-4 rounded text-[#8AB4F8] focus:ring-0 accent-[#8AB4F8]" />
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>⚡</span> TV App Quick Launchers
+                  </span>
+                  <span class="text-[10px] bg-purple-500/10 text-purple-400 font-semibold px-2 py-0.5 rounded border border-purple-500/20">One-Tap</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">One-tap pills to instantly launch YouTube, Netflix, Prime Video, or TV Settings.</p>
+              </div>
+            </label>
+
+            <!-- Feature 4: Voice Dictation & Search -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-[#283248] bg-[#181D2A] cursor-pointer hover:border-[#8AB4F8]/50 transition-all">
+              <input type="checkbox" id="toggle-voice" checked onchange="updateFeatures()" class="mt-1 w-4 h-4 rounded text-[#8AB4F8] focus:ring-0 accent-[#8AB4F8]" />
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>🎙️</span> Voice Search & Dictation
+                  </span>
+                  <span class="text-[10px] bg-sky-500/10 text-sky-400 font-semibold px-2 py-0.5 rounded border border-sky-500/20">Microphone</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Speak into phone mic to transcribe and search on TV without typing.</p>
+              </div>
+            </label>
+
+            <!-- Feature 5: Sleep Timer -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-[#283248] bg-[#181D2A] cursor-pointer hover:border-[#8AB4F8]/50 transition-all">
+              <input type="checkbox" id="toggle-sleep" checked onchange="updateFeatures()" class="mt-1 w-4 h-4 rounded text-[#8AB4F8] focus:ring-0 accent-[#8AB4F8]" />
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>⏱️</span> TV Sleep Timer (15m/30m/60m)
+                  </span>
+                  <span class="text-[10px] bg-amber-500/10 text-amber-400 font-semibold px-2 py-0.5 rounded border border-amber-500/20">Bedtime</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Automatically pause and put TV into dark ambient standby after set minutes.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Improved Icon Concepts -->
+        <div class="bg-[#121622] border border-[#283248] rounded-2xl p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-[#8AB4F8] flex items-center gap-2">
+              <span>🎨</span> Improved Google TV Icon Concepts
+            </h2>
+            <span class="text-[11px] font-mono text-slate-400">Select preferred style</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Icon Concept A: Google TV Periwinkle Halo (Recommended) -->
+            <button onclick="selectIconConcept('periwinkle')" id="icon-card-periwinkle" class="p-3 rounded-xl border border-[#8AB4F8] bg-[#181D2A] text-left transition-all shadow-md">
+              <div class="w-16 h-16 mx-auto mb-2 rounded-2xl bg-[#0F131C] border border-[#283248] p-2 flex items-center justify-center relative overflow-hidden shadow-inner">
+                <div class="absolute inset-0 bg-gradient-to-tr from-[#8AB4F8]/20 to-transparent"></div>
+                <!-- Mini SVG Icon -->
+                <svg viewBox="0 0 48 48" class="w-10 h-10 relative z-10">
+                  <rect x="14" y="8" width="20" height="32" rx="4" fill="#8AB4F8"/>
+                  <rect x="16" y="12" width="16" height="14" rx="2" fill="#0F131C"/>
+                  <polygon points="21,16 29,19 21,22" fill="#8AB4F8"/>
+                  <circle cx="24" cy="32" r="2.5" fill="#0F131C"/>
+                  <path d="M38,16 A12,12 0 0,1 38,32" stroke="#A8C7FA" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M10,16 A12,12 0 0,0 10,32" stroke="#A8C7FA" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="text-center">
+                <div class="text-xs font-bold text-white">Google TV Halo</div>
+                <div class="text-[10px] text-[#8AB4F8]">Recommended</div>
+              </div>
+            </button>
+
+            <!-- Icon Concept B: Minimalist Cinema Display -->
+            <button onclick="selectIconConcept('cinema')" id="icon-card-cinema" class="p-3 rounded-xl border border-[#283248] bg-[#181D2A]/60 text-left transition-all hover:border-slate-600">
+              <div class="w-16 h-16 mx-auto mb-2 rounded-2xl bg-[#0F131C] border border-[#283248] p-2 flex items-center justify-center relative overflow-hidden shadow-inner">
+                <!-- Mini TV Icon -->
+                <svg viewBox="0 0 48 48" class="w-10 h-10 relative z-10">
+                  <rect x="6" y="10" width="36" height="24" rx="4" fill="#181D2A" stroke="#8AB4F8" stroke-width="2"/>
+                  <polygon points="21,17 31,22 21,27" fill="#8AB4F8"/>
+                  <rect x="22" y="34" width="4" height="4" fill="#64748B"/>
+                  <rect x="16" y="38" width="16" height="2" rx="1" fill="#64748B"/>
+                  <path d="M18,6 A10,10 0 0,1 30,6" stroke="#A8C7FA" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="text-center">
+                <div class="text-xs font-bold text-slate-300">Cinema Display</div>
+                <div class="text-[10px] text-slate-500">Big Screen TV</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Interactive Live Phone Mockup (7 cols) -->
+      <div class="lg:col-span-7 flex flex-col items-center">
+        
+        <!-- Live Action Feedback Pill -->
+        <div id="live-feedback" class="mb-3 px-4 py-1.5 rounded-full text-xs font-mono font-bold bg-[#181D2A] border border-[#283248] text-[#8AB4F8] transition-all opacity-0 flex items-center gap-2">
+          <span>✨</span> <span id="feedback-text">Command Triggered</span>
+        </div>
+
+        <!-- Phone Shell -->
+        <div class="w-[360px] rounded-[46px] p-3.5 bg-[#0A0D14] border-2 border-[#283248] shadow-2xl shadow-black relative">
+          
+          <!-- Inner Screen -->
+          <div class="w-full rounded-[38px] p-4 bg-[#0F131C] text-slate-100 min-h-[720px] flex flex-col justify-between overflow-hidden relative">
+            
+            <!-- Top App Bar -->
+            <div>
+              <div class="flex items-center justify-between pt-1 pb-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#8AB4F8] to-[#4285F4] flex items-center justify-center font-black text-xs text-[#0A1329] shadow-sm">
+                    V
+                  </div>
+                  <div>
+                    <h2 class="font-bold text-sm tracking-tight leading-none text-white">VDO Remote</h2>
+                    <span class="text-[10px] text-slate-400 font-mono">Living Room TV</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
+                  </span>
+                  <!-- Voice Dictation Button -->
+                  <button id="phone-voice-btn" onclick="triggerAction('🎙️ Voice Search Activated: Say a movie or YouTube title...')" class="w-7 h-7 rounded-full flex items-center justify-center bg-[#202738] border border-[#283248] text-slate-300 hover:text-[#8AB4F8] text-xs">
+                    🎙️
+                  </button>
+                  <!-- Keyboard Button -->
+                  <button onclick="triggerAction('⌨️ Type on TV Keyboard Opened')" class="w-7 h-7 rounded-full flex items-center justify-center bg-[#202738] border border-[#283248] text-slate-300 hover:text-[#8AB4F8] text-xs">
+                    ⌨️
+                  </button>
+                </div>
+              </div>
+
+              <!-- TV Telemetry Strip -->
+              <div class="p-2.5 rounded-xl border border-[#283248] bg-[#181D2A] flex items-center justify-between text-xs my-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#8AB4F8]"></span>
+                  <span class="font-bold text-[#8AB4F8] text-[11px]">VDO TV • NOW STREAMING</span>
+                </div>
+                <span class="text-[10px] font-mono text-slate-400">1080p • AC-3 5.1</span>
+              </div>
+            </div>
+
+            <!-- CONTROLLER BODY -->
+            <div class="flex-1 flex flex-col justify-between py-1 space-y-3">
+              
+              <!-- 1. NAVIGATION CLUSTER (Home, Back, Menu, Power) -->
+              <div id="module-nav" class="grid grid-cols-4 gap-2">
+                <button onclick="triggerAction('🏠 Home: Sent to TV')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center gap-1 hover:border-[#8AB4F8] active:scale-95 transition-all">
+                  <span class="text-sm">🏠</span>
+                  <span class="text-[9px] font-bold text-slate-300 uppercase">Home</span>
+                </button>
+                <button onclick="triggerAction('↩ Back: Sent to TV')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center gap-1 hover:border-[#8AB4F8] active:scale-95 transition-all">
+                  <span class="text-sm">↩</span>
+                  <span class="text-[9px] font-bold text-slate-300 uppercase">Back</span>
+                </button>
+                <button onclick="triggerAction('☰ TV Menu OSD Opened')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center gap-1 hover:border-[#8AB4F8] active:scale-95 transition-all">
+                  <span class="text-sm">☰</span>
+                  <span class="text-[9px] font-bold text-slate-300 uppercase">Menu</span>
+                </button>
+                <button onclick="triggerAction('⚡ Standby / Power')" class="py-2 rounded-xl bg-[#2c141d] border border-red-500/30 flex flex-col items-center justify-center gap-1 text-red-400 hover:border-red-400 active:scale-95 transition-all">
+                  <span class="text-sm">⚡</span>
+                  <span class="text-[9px] font-bold uppercase">Standby</span>
+                </button>
+              </div>
+
+              <!-- 2. MODE SELECTOR (D-PAD vs TRACKPAD) -->
+              <div id="module-mode-selector" class="p-1 rounded-xl bg-[#181D2A] border border-[#283248] flex">
+                <button onclick="setControlMode('dpad')" id="btn-mode-dpad" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all bg-[#8AB4F8] text-[#0A1329] shadow-sm flex items-center justify-center gap-1.5">
+                  <span>🔘</span> D-Pad Wheel
+                </button>
+                <button onclick="setControlMode('trackpad')" id="btn-mode-trackpad" class="flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5">
+                  <span>👆</span> Swipe Trackpad
+                </button>
+              </div>
+
+              <!-- 3. CENTER CONTROLLER (D-PAD OR TRACKPAD) -->
+              <div class="flex items-center justify-center py-1">
+                
+                <!-- OPTION A: TACTILE D-PAD WHEEL -->
+                <div id="panel-dpad" class="w-52 h-52 rounded-full border border-[#283248] bg-[#141926] flex items-center justify-center relative shadow-xl">
+                  <!-- Up -->
+                  <button onclick="triggerAction('▲ D-Pad UP: +30s')" class="absolute top-2 w-14 h-12 flex items-center justify-center text-[#8AB4F8] hover:scale-110 active:scale-90 transition-all text-xl font-black">▲</button>
+                  <!-- Down -->
+                  <button onclick="triggerAction('▼ D-Pad DOWN: -30s')" class="absolute bottom-2 w-14 h-12 flex items-center justify-center text-[#8AB4F8] hover:scale-110 active:scale-90 transition-all text-xl font-black">▼</button>
+                  <!-- Left -->
+                  <button onclick="triggerAction('◀ D-Pad LEFT: -10s')" class="absolute left-2 w-12 h-14 flex items-center justify-center text-[#8AB4F8] hover:scale-110 active:scale-90 transition-all text-xl font-black">◀</button>
+                  <!-- Right -->
+                  <button onclick="triggerAction('▶ D-Pad RIGHT: +10s')" class="absolute right-2 w-12 h-14 flex items-center justify-center text-[#8AB4F8] hover:scale-110 active:scale-90 transition-all text-xl font-black">▶</button>
+                  <!-- Center OK -->
+                  <button onclick="triggerAction('🔘 Center OK: Play/Pause Toggle')" class="w-18 h-18 rounded-full font-black text-sm shadow-md active:scale-95 transition-all flex items-center justify-center bg-[#8AB4F8] text-[#0A1329] p-4">
+                    OK
+                  </button>
+                </div>
+
+                <!-- OPTION B: GESTURE TRACKPAD -->
+                <div id="panel-trackpad" class="hidden w-64 h-52 rounded-2xl border-2 border-dashed border-[#8AB4F8]/40 bg-[#141926] touchpad-grid p-4 flex flex-col justify-between items-center select-none cursor-pointer hover:border-[#8AB4F8]"
+                     onmousedown="startTrackpadSwipe(event)" onmousemove="moveTrackpadSwipe(event)" onmouseup="endTrackpadSwipe(event)">
+                  <div class="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider flex items-center gap-1">
+                    <span>👆</span> Drag to Seek • Tap for OK
+                  </div>
+                  <div id="trackpad-indicator" class="w-10 h-10 rounded-full border border-[#8AB4F8] bg-[#8AB4F8]/20 flex items-center justify-center text-[#8AB4F8] text-xs font-bold transition-transform">
+                    OK
+                  </div>
+                  <div class="flex justify-between w-full text-[9px] text-slate-500 font-mono">
+                    <span>⏪ Swipe Left</span>
+                    <span>Swipe Right ⏩</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 4. DUAL ROCKER CAPSULES (VOLUME & SEEK) -->
+              <div class="grid grid-cols-2 gap-3">
+                <!-- Volume Capsule -->
+                <div class="h-28 rounded-2xl border border-[#283248] bg-[#181D2A] p-2 flex flex-col justify-between items-center">
+                  <button onclick="triggerAction('🔊 Vol + 5%')" class="w-full py-1 text-center font-bold text-[#8AB4F8] hover:text-white text-base active:scale-90 transition-transform">+</button>
+                  <div class="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-400">VOLUME</div>
+                  <button onclick="triggerAction('🔉 Vol - 5%')" class="w-full py-1 text-center font-bold text-[#8AB4F8] hover:text-white text-base active:scale-90 transition-transform">−</button>
+                </div>
+
+                <!-- Seek Capsule -->
+                <div class="h-28 rounded-2xl border border-[#283248] bg-[#181D2A] p-2 flex flex-col justify-between items-center">
+                  <button onclick="triggerAction('⏩ Seek +15s')" class="w-full py-1 text-center font-bold text-[#A8C7FA] hover:text-white text-xs active:scale-90 transition-transform">⏩ +15s</button>
+                  <div class="text-[10px] uppercase font-mono font-bold tracking-wider text-[#A8C7FA]">SEEK</div>
+                  <button onclick="triggerAction('⏪ Seek -15s')" class="w-full py-1 text-center font-bold text-[#A8C7FA] hover:text-white text-xs active:scale-90 transition-transform">⏪ -15s</button>
+                </div>
+              </div>
+
+              <!-- 5. APP SHORTCUTS (YouTube, Netflix, Settings) -->
+              <div id="module-apps" class="space-y-1">
+                <div class="text-[10px] uppercase font-mono font-bold text-slate-400 px-1">TV App Shortcuts</div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button onclick="triggerAction('▶️ Opening YouTube on TV...')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 hover:border-red-400 transition-all">
+                    <span class="text-red-500">▶</span> YouTube
+                  </button>
+                  <button onclick="triggerAction('🎬 Opening Netflix on TV...')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 hover:border-red-600 transition-all">
+                    <span class="text-red-600 font-black">N</span> Netflix
+                  </button>
+                  <button onclick="triggerAction('⚙️ Opening TV Settings...')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 hover:border-[#8AB4F8] transition-all">
+                    <span>⚙️</span> Settings
+                  </button>
+                </div>
+              </div>
+
+              <!-- 6. SLEEP TIMER BAR -->
+              <div id="module-sleep" class="flex items-center justify-between p-2 rounded-xl bg-[#181D2A] border border-[#283248] text-xs">
+                <span class="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                  <span>⏱️</span> Sleep Timer:
+                </span>
+                <div class="flex gap-1">
+                  <button onclick="triggerAction('⏱️ Sleep Timer: 15m set')" class="px-2 py-0.5 rounded-lg bg-[#202738] text-[10px] font-mono text-[#8AB4F8] hover:bg-[#8AB4F8] hover:text-[#0A1329] transition-all">15m</button>
+                  <button onclick="triggerAction('⏱️ Sleep Timer: 30m set')" class="px-2 py-0.5 rounded-lg bg-[#202738] text-[10px] font-mono text-[#8AB4F8] hover:bg-[#8AB4F8] hover:text-[#0A1329] transition-all">30m</button>
+                  <button onclick="triggerAction('⏱️ Sleep Timer: 60m set')" class="px-2 py-0.5 rounded-lg bg-[#202738] text-[10px] font-mono text-[#8AB4F8] hover:bg-[#8AB4F8] hover:text-[#0A1329] transition-all">60m</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom Home Indicator -->
+            <div class="flex justify-center pt-2">
+              <div class="w-28 h-1 rounded-full bg-slate-700/60"></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- SELECTION SUMMARY BAR -->
+    <div class="mt-8 p-5 rounded-2xl bg-[#121622] border border-[#283248] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <h3 class="font-bold text-white text-sm">Selected Feature Set</h3>
+        <p id="selection-summary" class="text-xs text-[#8AB4F8] mt-0.5">
+          Home & Back Cluster • D-Pad & Trackpad Toggle • App Shortcuts • Voice Search • Sleep Timer
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400">Tell me what to include, or say <strong>"Add all"</strong>!</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let feedbackTimer = null;
+    let isSwiping = false;
+    let startX = 0;
+
+    function triggerAction(text) {
+      const pill = document.getElementById('live-feedback');
+      const label = document.getElementById('feedback-text');
+      label.textContent = text;
+      pill.classList.remove('opacity-0');
+      pill.classList.add('opacity-100');
+
+      if (feedbackTimer) clearTimeout(feedbackTimer);
+      feedbackTimer = setTimeout(() => {
+        pill.classList.remove('opacity-100');
+        pill.classList.add('opacity-0');
+      }, 1800);
+    }
+
+    function setControlMode(mode) {
+      const dpadPanel = document.getElementById('panel-dpad');
+      const trackpadPanel = document.getElementById('panel-trackpad');
+      const btnDpad = document.getElementById('btn-mode-dpad');
+      const btnTrackpad = document.getElementById('btn-mode-trackpad');
+
+      if (mode === 'dpad') {
+        dpadPanel.classList.remove('hidden');
+        trackpadPanel.classList.add('hidden');
+        btnDpad.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold transition-all bg-[#8AB4F8] text-[#0A1329] shadow-sm flex items-center justify-center gap-1.5';
+        btnTrackpad.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5';
+        triggerAction('Switched to Tactile D-Pad Wheel');
+      } else {
+        dpadPanel.classList.add('hidden');
+        trackpadPanel.classList.remove('hidden');
+        btnTrackpad.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold transition-all bg-[#8AB4F8] text-[#0A1329] shadow-sm flex items-center justify-center gap-1.5';
+        btnDpad.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5';
+        triggerAction('Switched to Swipe Trackpad Mode');
+      }
+    }
+
+    function updateFeatures() {
+      const nav = document.getElementById('toggle-nav').checked;
+      const trackpad = document.getElementById('toggle-trackpad').checked;
+      const apps = document.getElementById('toggle-apps').checked;
+      const voice = document.getElementById('toggle-voice').checked;
+      const sleep = document.getElementById('toggle-sleep').checked;
+
+      document.getElementById('module-nav').style.display = nav ? 'grid' : 'none';
+      document.getElementById('module-mode-selector').style.display = trackpad ? 'flex' : 'none';
+      document.getElementById('module-apps').style.display = apps ? 'block' : 'none';
+      document.getElementById('phone-voice-btn').style.display = voice ? 'flex' : 'none';
+      document.getElementById('module-sleep').style.display = sleep ? 'flex' : 'none';
+
+      // Update Summary
+      const active = [];
+      if (nav) active.push("Home & Back Cluster");
+      if (trackpad) active.push("Trackpad Toggle");
+      if (apps) active.push("App Shortcuts");
+      if (voice) active.push("Voice Dictation");
+      if (sleep) active.push("Sleep Timer");
+
+      document.getElementById('selection-summary').textContent = active.length > 0 ? active.join(" • ") : "Minimal Remote (D-Pad & Volume only)";
+    }
+
+    function selectIconConcept(concept) {
+      const cardP = document.getElementById('icon-card-periwinkle');
+      const cardC = document.getElementById('icon-card-cinema');
+
+      if (concept === 'periwinkle') {
+        cardP.classList.remove('border-[#283248]', 'bg-[#181D2A]/60');
+        cardP.classList.add('border-[#8AB4F8]', 'bg-[#181D2A]');
+        cardC.classList.remove('border-[#8AB4F8]', 'bg-[#181D2A]');
+        cardC.classList.add('border-[#283248]', 'bg-[#181D2A]/60');
+        triggerAction('Icon Selected: Google TV Halo (Periwinkle Remote)');
+      } else {
+        cardC.classList.remove('border-[#283248]', 'bg-[#181D2A]/60');
+        cardC.classList.add('border-[#8AB4F8]', 'bg-[#181D2A]');
+        cardP.classList.remove('border-[#8AB4F8]', 'bg-[#181D2A]');
+        cardP.classList.add('border-[#283248]', 'bg-[#181D2A]/60');
+        triggerAction('Icon Selected: Cinema Display (Minimalist Screen)');
+      }
+    }
+
+    function startTrackpadSwipe(e) {
+      isSwiping = true;
+      startX = e.clientX;
+    }
+
+    function moveTrackpadSwipe(e) {
+      if (!isSwiping) return;
+      const deltaX = e.clientX - startX;
+      const dot = document.getElementById('trackpad-indicator');
+      dot.style.transform = `translateX(${Math.max(-40, Math.min(40, deltaX))}px)`;
+    }
+
+    function endTrackpadSwipe(e) {
+      if (!isSwiping) return;
+      isSwiping = false;
+      const deltaX = e.clientX - startX;
+      const dot = document.getElementById('trackpad-indicator');
+      dot.style.transform = `translateX(0px)`;
+
+      if (deltaX > 25) {
+        triggerAction('⏩ Swiped Right: Fast Forward +15s');
+      } else if (deltaX < -25) {
+        triggerAction('⏪ Swiped Left: Rewind -15s');
+      } else {
+        triggerAction('🔘 Trackpad Tap: Play/Pause Toggle');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -127,8 +127,9 @@
       </div>
 
       <!-- TAB 2: TV REMOTE SCREEN -->
-      <div id="m-view-remote" class="space-y-4 hidden">
-        <div class="bg-[#181D2A] border border-[#283248] rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs">
+      <div id="m-view-remote" class="space-y-3.5 hidden">
+        <!-- TV Telemetry Strip -->
+        <div class="bg-[#181D2A] border border-[#283248] rounded-xl px-3.5 py-2 flex items-center justify-between text-xs">
           <div class="flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span class="text-emerald-400 font-bold text-[10px]">TV LIVE SYNC</span>
@@ -136,52 +137,120 @@
           <span class="text-slate-400 font-mono text-[10px]">01:31:20 / 02:49:03</span>
         </div>
 
-        <div class="flex justify-between px-3">
-          <button class="w-12 h-12 rounded-full bg-rose-950/60 border border-rose-900 text-red-400 flex items-center justify-center text-lg hover:bg-rose-900/60 shadow-lg">⏻</button>
-          <button class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-[#8AB4F8] flex items-center justify-center text-xs font-bold hover:bg-slate-700 shadow-lg">MENU</button>
-          <button class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-amber-400 flex items-center justify-center text-base hover:bg-slate-700 shadow-lg">🔇</button>
+        <!-- Utility Toolbar (Voice, Keyboard, Menu, Mute) -->
+        <div class="grid grid-cols-4 gap-2">
+          <button onclick="simulateAction('🎙️ Voice Search Activated: Speak title...')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center text-xs text-[#8AB4F8] hover:border-[#8AB4F8]">
+            <span class="text-base">🎙️</span>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">Voice</span>
+          </button>
+          <button onclick="simulateAction('⌨️ Type on TV Keyboard Opened')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center text-xs text-[#A8C7FA] hover:border-[#8AB4F8]">
+            <span class="text-base">⌨️</span>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">Type</span>
+          </button>
+          <button onclick="simulateAction('☰ TV Menu OSD Opened')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center text-xs text-[#8AB4F8] hover:border-[#8AB4F8]">
+            <span class="text-base">☰</span>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">Menu</span>
+          </button>
+          <button onclick="simulateAction('🔇 Mute Toggled')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center text-xs text-amber-400 hover:border-amber-400">
+            <span class="text-base">🔇</span>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">Mute</span>
+          </button>
         </div>
 
-        <div class="bg-[#181D2A] border border-[#283248] rounded-3xl p-4 flex flex-col items-center">
-          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-2">Directional Navigation Pad</span>
-          <div class="relative w-48 h-48 rounded-full bg-[#202738] shadow-2xl flex items-center justify-center border border-slate-700">
-            <button class="absolute top-1 text-[#8AB4F8] hover:text-white p-2">▲</button>
-            <button class="absolute left-1 text-[#8AB4F8] hover:text-white p-2">◀</button>
-            <button class="w-16 h-16 rounded-full bg-[#8AB4F8] text-black font-black text-base shadow-md flex items-center justify-center hover:scale-105 transition-transform">OK</button>
-            <button class="absolute right-1 text-[#8AB4F8] hover:text-white p-2">▶</button>
-            <button class="absolute bottom-1 text-[#8AB4F8] hover:text-white p-2">▼</button>
+        <!-- Feature 1: TV Navigation Cluster (Home, Back, Menu, Standby) -->
+        <div class="grid grid-cols-4 gap-2">
+          <button onclick="simulateAction('🏠 Home: Sent to TV')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center hover:border-[#8AB4F8] active:scale-95 transition-all">
+            <span class="text-sm">🏠</span>
+            <span class="text-[9px] font-bold text-[#8AB4F8] uppercase">Home</span>
+          </button>
+          <button onclick="simulateAction('↩ Back: Sent to TV')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center hover:border-[#8AB4F8] active:scale-95 transition-all">
+            <span class="text-sm">↩</span>
+            <span class="text-[9px] font-bold text-slate-300 uppercase">Back</span>
+          </button>
+          <button onclick="simulateAction('☰ TV Menu OSD')" class="py-2 rounded-xl bg-[#202738] border border-[#283248] flex flex-col items-center justify-center hover:border-[#8AB4F8] active:scale-95 transition-all">
+            <span class="text-sm">☰</span>
+            <span class="text-[9px] font-bold text-[#A8C7FA] uppercase">Menu</span>
+          </button>
+          <button onclick="simulateAction('⚡ TV Standby')" class="py-2 rounded-xl bg-[#2c141d] border border-red-500/30 flex flex-col items-center justify-center text-red-400 hover:border-red-400 active:scale-95 transition-all">
+            <span class="text-sm">⚡</span>
+            <span class="text-[9px] font-bold uppercase">Standby</span>
+          </button>
+        </div>
+
+        <!-- Feature 2: Mode Selector (D-Pad vs. Trackpad) -->
+        <div class="p-1 rounded-xl bg-[#181D2A] border border-[#283248] flex text-xs">
+          <button id="pill-mode-dpad" onclick="switchControlMode('dpad')" class="flex-1 py-1.5 rounded-lg font-bold transition-all bg-[#8AB4F8] text-[#0A1329] flex items-center justify-center gap-1.5 shadow-sm">
+            <span>🔘</span> D-Pad Wheel
+          </button>
+          <button id="pill-mode-trackpad" onclick="switchControlMode('trackpad')" class="flex-1 py-1.5 rounded-lg font-bold transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+            <span>👆</span> Swipe Trackpad
+          </button>
+        </div>
+
+        <!-- Option A: D-Pad Wheel Controller -->
+        <div id="ctrl-dpad" class="bg-[#181D2A] border border-[#283248] rounded-3xl p-3 flex flex-col items-center">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1.5">Directional Navigation Pad</span>
+          <div class="relative w-44 h-44 rounded-full bg-[#202738] shadow-2xl flex items-center justify-center border border-slate-700">
+            <button onclick="simulateAction('▲ Seek +30s')" class="absolute top-1 text-[#8AB4F8] hover:text-white p-2 text-lg font-bold">▲</button>
+            <button onclick="simulateAction('◀ Seek -10s')" class="absolute left-1 text-[#8AB4F8] hover:text-white p-2 text-lg font-bold">◀</button>
+            <button onclick="simulateAction('🔘 OK: Play/Pause')" class="w-14 h-14 rounded-full bg-[#8AB4F8] text-[#0A1329] font-black text-sm shadow-md flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">OK</button>
+            <button onclick="simulateAction('▶ Seek +10s')" class="absolute right-1 text-[#8AB4F8] hover:text-white p-2 text-lg font-bold">▶</button>
+            <button onclick="simulateAction('▼ Seek -30s')" class="absolute bottom-1 text-[#8AB4F8] hover:text-white p-2 text-lg font-bold">▼</button>
           </div>
         </div>
 
-        <div class="flex justify-around px-2">
-          <!-- Volume Rocker -->
-          <div class="w-24 h-32 rounded-3xl bg-[#181D2A] border border-[#283248] flex flex-col justify-between items-center py-2 shadow-lg">
-            <button class="text-[#8AB4F8] text-lg font-bold hover:text-white w-full py-1">+</button>
-            <div class="text-center">
-              <div class="text-xs">🔊</div>
-              <div class="text-[10px] font-bold text-slate-400">90%</div>
+        <!-- Option B: Swipe Gesture Trackpad -->
+        <div id="ctrl-trackpad" class="hidden bg-[#181D2A] border border-[#283248] rounded-3xl p-3 flex flex-col items-center">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1.5">Gesture Touchpad</span>
+          <div class="w-full h-44 rounded-2xl bg-[#202738] border border-[#8AB4F8]/40 p-3 flex flex-col justify-between items-center select-none cursor-pointer" onclick="simulateAction('🔘 Touchpad Tap: Play/Pause')">
+            <div class="flex justify-between w-full text-[9px] text-slate-400 font-mono">
+              <span>▲ Vol +</span>
+              <span class="text-[#8AB4F8] font-bold">👆 Swipe or Tap</span>
+              <span>▲ Vol +</span>
             </div>
-            <button class="text-[#8AB4F8] text-lg font-bold hover:text-white w-full py-1">−</button>
+            <div class="w-14 h-14 rounded-full bg-[#8AB4F8]/15 border border-[#8AB4F8] flex flex-col items-center justify-center text-[#8AB4F8]">
+              <span class="text-sm">👆</span>
+              <span class="text-[10px] font-black">OK</span>
+            </div>
+            <div class="flex justify-between w-full text-[9px] text-slate-400 font-mono">
+              <span>⏪ −15s</span>
+              <span id="trackpad-live-feedback" class="text-slate-300">Swipe to Seek / Vol</span>
+              <span>+15s ⏩</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hardware-Style Rockers Row -->
+        <div class="flex justify-around px-1">
+          <!-- Volume Rocker -->
+          <div class="w-24 h-28 rounded-2xl bg-[#181D2A] border border-[#283248] flex flex-col justify-between items-center py-1.5 shadow-lg">
+            <button onclick="simulateAction('🔊 Vol +5%')" class="text-[#8AB4F8] text-base font-bold hover:text-white w-full py-0.5">+</button>
+            <div class="text-center">
+              <div class="text-[10px] font-bold text-slate-400 uppercase">VOLUME</div>
+              <div class="text-[11px] font-bold text-slate-200">90%</div>
+            </div>
+            <button onclick="simulateAction('🔉 Vol -5%')" class="text-[#8AB4F8] text-base font-bold hover:text-white w-full py-0.5">−</button>
           </div>
 
           <!-- Seek Rocker -->
-          <div class="w-24 h-32 rounded-3xl bg-[#181D2A] border border-[#283248] flex flex-col justify-between items-center py-2 shadow-lg">
-            <button class="text-indigo-400 text-xs font-bold hover:text-white w-full py-1 font-mono">▶▶ +15s</button>
+          <div class="w-24 h-28 rounded-2xl bg-[#181D2A] border border-[#283248] flex flex-col justify-between items-center py-1.5 shadow-lg">
+            <button onclick="simulateAction('⏩ Seek +15s')" class="text-[#A8C7FA] text-[11px] font-bold hover:text-white w-full py-0.5 font-mono">⏩ +15s</button>
             <div class="text-center">
-              <div class="text-[10px] font-extrabold text-indigo-400">SEEK</div>
+              <div class="text-[10px] font-extrabold text-[#A8C7FA]">SEEK</div>
             </div>
-            <button class="text-indigo-400 text-xs font-bold hover:text-white w-full py-1 font-mono">◀◀ -15s</button>
+            <button onclick="simulateAction('⏪ Seek -15s')" class="text-[#A8C7FA] text-[11px] font-bold hover:text-white w-full py-0.5 font-mono">⏪ -15s</button>
           </div>
         </div>
 
-        <div class="flex justify-between items-center px-2 pt-1">
-          <button class="px-3.5 py-2 rounded-xl border border-slate-700 text-xs text-slate-300 font-semibold hover:bg-slate-800">
-            ← Standby
+        <!-- Bottom Action Row: Back, Play/Pause, Quick Aspect -->
+        <div class="flex justify-between items-center px-1 pt-1">
+          <button onclick="simulateAction('↩ Back: Sent to TV')" class="px-3 py-2 rounded-xl border border-[#283248] text-xs text-slate-300 font-semibold hover:border-[#8AB4F8]">
+            ↩ Back
           </button>
-          <button class="w-11 h-11 rounded-full bg-[#8AB4F8] text-black font-bold flex items-center justify-center text-sm shadow-[0_0_12px_#00e5ff]">
+          <button onclick="simulateAction('▶ Play/Pause Toggle')" class="w-12 h-12 rounded-full bg-[#8AB4F8] text-[#0A1329] font-black flex items-center justify-center text-sm shadow-md">
             ▶/❚❚
           </button>
-          <button class="px-3.5 py-2 rounded-xl border border-slate-700 text-xs text-slate-300 font-semibold hover:bg-slate-800">
+          <button onclick="simulateAction('🔲 Aspect Ratio Toggled')" class="px-3 py-2 rounded-xl border border-[#283248] text-xs text-slate-300 font-semibold hover:border-[#8AB4F8]">
             Fit Aspect
           </button>
         </div>
@@ -226,6 +295,30 @@
       navR.className = 'flex flex-col items-center text-[#8AB4F8]';
       title.innerText = 'VDO TV Remote';
     });
+
+    function switchControlMode(mode) {
+      const dpadPill = document.getElementById('pill-mode-dpad');
+      const trackpadPill = document.getElementById('pill-mode-trackpad');
+      const dpadCtrl = document.getElementById('ctrl-dpad');
+      const trackpadCtrl = document.getElementById('ctrl-trackpad');
+
+      if (mode === 'dpad') {
+        dpadCtrl.classList.remove('hidden');
+        trackpadCtrl.classList.add('hidden');
+        dpadPill.className = 'flex-1 py-1.5 rounded-lg font-bold transition-all bg-[#8AB4F8] text-[#0A1329] flex items-center justify-center gap-1.5 shadow-sm';
+        trackpadPill.className = 'flex-1 py-1.5 rounded-lg font-bold transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5';
+      } else {
+        dpadCtrl.classList.add('hidden');
+        trackpadCtrl.classList.remove('hidden');
+        trackpadPill.className = 'flex-1 py-1.5 rounded-lg font-bold transition-all bg-[#8AB4F8] text-[#0A1329] flex items-center justify-center gap-1.5 shadow-sm';
+        dpadPill.className = 'flex-1 py-1.5 rounded-lg font-bold transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5';
+      }
+    }
+
+    function simulateAction(msg) {
+      const tf = document.getElementById('trackpad-live-feedback');
+      if (tf) tf.innerText = msg;
+    }
   </script>
 </body>
 </html>

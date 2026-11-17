@@ -108,13 +108,13 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#060913"
+        android:fillColor="#0F131C"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#0E1626"
+        android:fillColor="#181D2A"
         android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
     <path
-        android:fillColor="#152037"
+        android:fillColor="#283248"
         android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
 </vector>
 EOF
@@ -127,50 +127,50 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
     android:viewportHeight="108">
     <!-- Outer Signal Waves -->
     <path
-        android:strokeColor="#818CF8"
+        android:strokeColor="#8AB4F8"
         android:strokeWidth="3"
         android:strokeLineCap="round"
         android:pathData="M81,38 a26,26 0 0,1 0,32" />
     <path
-        android:strokeColor="#00E5FF"
+        android:strokeColor="#A8C7FA"
         android:strokeWidth="3.2"
         android:strokeLineCap="round"
         android:pathData="M75,44 a18,18 0 0,1 0,20" />
     <path
-        android:strokeColor="#818CF8"
+        android:strokeColor="#8AB4F8"
         android:strokeWidth="3"
         android:strokeLineCap="round"
         android:pathData="M27,38 a26,26 0 0,0 0,32" />
     <path
-        android:strokeColor="#00E5FF"
+        android:strokeColor="#A8C7FA"
         android:strokeWidth="3.2"
         android:strokeLineCap="round"
         android:pathData="M33,44 a18,18 0 0,0 0,20" />
 
     <!-- Sleek Remote Contour Body -->
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#8AB4F8"
         android:pathData="M43,26 h22 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 h-22 c-3.3,0 -6,-2.7 -6,-6 v-44 c0,-3.3 2.7,-6 6,-6 z" />
 
     <!-- Inset Display Screen -->
     <path
-        android:fillColor="#060913"
+        android:fillColor="#0F131C"
         android:pathData="M41,33 h26 v28 h-26 z" />
 
     <!-- Sharp Play Emblem -->
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#A8C7FA"
         android:pathData="M50,42 l12,5 -12,5 z" />
 
     <!-- Remote Navigation Circle -->
     <path
-        android:fillColor="#060913"
+        android:fillColor="#0F131C"
         android:pathData="M54,69 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
     <path
-        android:fillColor="#060913"
+        android:fillColor="#0F131C"
         android:pathData="M45,69 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
     <path
-        android:fillColor="#060913"
+        android:fillColor="#0F131C"
         android:pathData="M63,69 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
 </vector>
 EOF
@@ -182,27 +182,27 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#060913"
+        android:fillColor="#0F131C"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#0E1626"
+        android:fillColor="#181D2A"
         android:pathData="M54,54m-44,0a44,44 0,1 1,88 0a44,44 0,1 1,-88 0" />
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#8AB4F8"
         android:pathData="M43,26 h22 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 h-22 c-3.3,0 -6,-2.7 -6,-6 v-44 c0,-3.3 2.7,-6 6,-6 z" />
     <path
-        android:fillColor="#060913"
+        android:fillColor="#0F131C"
         android:pathData="M41,33 h26 v28 h-26 z" />
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#A8C7FA"
         android:pathData="M50,42 l12,5 -12,5 z" />
     <path
-        android:strokeColor="#818CF8"
+        android:strokeColor="#8AB4F8"
         android:strokeWidth="3.2"
         android:strokeLineCap="round"
         android:pathData="M76,43 a18,18 0 0,1 0,22" />
     <path
-        android:strokeColor="#00E5FF"
+        android:strokeColor="#A8C7FA"
         android:strokeWidth="3.2"
         android:strokeLineCap="round"
         android:pathData="M83,37 a26,26 0 0,1 0,34" />
@@ -957,6 +957,7 @@ EOF
 cat << 'EOF' > app/src/main/java/com/example/lancast/MainActivity.kt
 package com.example.lancast
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -964,6 +965,8 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.speech.RecognizerIntent
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -973,7 +976,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -989,6 +995,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -1658,8 +1665,36 @@ fun RemoteScreen(
     isConnected: Boolean
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     var showKeyboardDialog by remember { mutableStateOf(false) }
+    var controlMode by remember { mutableStateOf("dpad") } // "dpad" or "trackpad"
+
+    // Speech-to-Text Recognition Launcher (Feature 4: Voice Search)
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spokenText = matches?.firstOrNull()
+            if (!spokenText.isNullOrBlank()) {
+                CastServerService.pushCommand("typeAndEnter", 0.0, spokenText)
+                Toast.makeText(context, "Voice Search sent: \"$spokenText\"", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val startVoiceRecognition = {
+        try {
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak search query or movie title for TV...")
+            }
+            speechLauncher.launch(intent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "Voice recognition not available on this device", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     if (showKeyboardDialog) {
         var textInput by remember { mutableStateOf("") }
@@ -1686,9 +1721,14 @@ fun RemoteScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         trailingIcon = {
-                            if (textInput.isNotEmpty()) {
-                                IconButton(onClick = { textInput = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { startVoiceRecognition() }) {
+                                    Icon(Icons.Default.Mic, contentDescription = "Voice Dictate", tint = GtvPrimary)
+                                }
+                                if (textInput.isNotEmpty()) {
+                                    IconButton(onClick = { textInput = "" }) {
+                                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                    }
                                 }
                             }
                         },
@@ -1778,7 +1818,7 @@ fun RemoteScreen(
             .verticalScroll(scrollState)
             .padding(horizontal = 20.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // TV Live Status Feedback Strip
         Surface(
@@ -1814,31 +1854,17 @@ fun RemoteScreen(
             }
         }
 
-        // Remote Top Utility Bar (Power, Menu, Type on TV Keyboard, Mute)
+        // Top Utility Toolbar (Voice Search, Type on TV, TV Menu OSD, Mute)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Feature 4: Voice Search Button
             FilledTonalIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("stop")
-                },
-                modifier = Modifier.size(50.dp),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = GtvError.copy(alpha = 0.15f),
-                    contentColor = GtvError
-                )
-            ) {
-                Icon(Icons.Default.PowerSettingsNew, contentDescription = "TV Power", modifier = Modifier.size(24.dp))
-            }
-
-            FilledTonalIconButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("menu")
+                    startVoiceRecognition()
                 },
                 modifier = Modifier.size(50.dp),
                 shape = CircleShape,
@@ -1847,9 +1873,10 @@ fun RemoteScreen(
                     contentColor = GtvPrimary
                 )
             ) {
-                Icon(Icons.Default.Menu, contentDescription = "TV Menu OSD", modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.Mic, contentDescription = "Voice Search", modifier = Modifier.size(24.dp))
             }
 
+            // Keyboard Type on TV Button
             FilledTonalIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -1865,6 +1892,23 @@ fun RemoteScreen(
                 Icon(Icons.Default.Keyboard, contentDescription = "Type on TV", modifier = Modifier.size(24.dp))
             }
 
+            // TV Menu OSD Button
+            FilledTonalIconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    CastServerService.pushCommand("menu")
+                },
+                modifier = Modifier.size(50.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = GtvSurfaceVariant,
+                    contentColor = GtvPrimary
+                )
+            ) {
+                Icon(Icons.Default.Menu, contentDescription = "TV Menu OSD", modifier = Modifier.size(24.dp))
+            }
+
+            // TV Mute Button
             FilledTonalIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -1885,16 +1929,38 @@ fun RemoteScreen(
             }
         }
 
-        // Tactile D-Pad Navigation Wheel
-        TactileRemoteWheel(onCommand = { cmd ->
-            when (cmd) {
-                "up" -> CastServerService.pushCommand("seekRelative", 30.0)
-                "down" -> CastServerService.pushCommand("seekRelative", -30.0)
-                "left" -> CastServerService.pushCommand("seekRelative", -10.0)
-                "right" -> CastServerService.pushCommand("seekRelative", 10.0)
-                "ok" -> CastServerService.pushCommand("toggle")
-            }
-        })
+        // Feature 1: TV Navigation Cluster (Home, Back, Menu, Standby)
+        NavigationCluster(
+            onHome = { CastServerService.pushCommand("home") },
+            onBack = { CastServerService.pushCommand("back") },
+            onMenu = { CastServerService.pushCommand("menu") },
+            onStandby = { CastServerService.pushCommand("stop") }
+        )
+
+        // Feature 2: Controller Mode Selector (D-Pad Wheel vs. Gesture Trackpad)
+        RemoteModeSelector(
+            currentMode = controlMode,
+            onModeChange = { controlMode = it }
+        )
+
+        // Center Controller Section (D-Pad Wheel OR Smooth Swipe Trackpad)
+        if (controlMode == "dpad") {
+            TactileRemoteWheel(onCommand = { cmd ->
+                when (cmd) {
+                    "up" -> CastServerService.pushCommand("seekRelative", 30.0)
+                    "down" -> CastServerService.pushCommand("seekRelative", -30.0)
+                    "left" -> CastServerService.pushCommand("seekRelative", -10.0)
+                    "right" -> CastServerService.pushCommand("seekRelative", 10.0)
+                    "ok" -> CastServerService.pushCommand("toggle")
+                }
+            })
+        } else {
+            GestureTrackpad(
+                onCommand = { cmd -> CastServerService.pushCommand(cmd) },
+                onSeekRelative = { offset -> CastServerService.pushCommand("seekRelative", offset) },
+                onVolumeRelative = { delta -> CastServerService.pushCommand("volumeRelative", delta) }
+            )
+        }
 
         // Hardware-Style Dual Rocker Capsules (Volume & Seek)
         HardwareRockersRow(
@@ -1908,16 +1974,16 @@ fun RemoteScreen(
             }
         )
 
-        // Bottom Remote Action Row: Standby, Hero Play/Pause, Quick Aspect
+        // Bottom Remote Action Row: Back, Hero Play/Pause, Quick Aspect
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    CastServerService.pushCommand("stop")
+                    CastServerService.pushCommand("back")
                 },
                 shape = RoundedCornerShape(14.dp),
                 border = BorderStroke(1.dp, GtvBorder),
@@ -1925,7 +1991,7 @@ fun RemoteScreen(
             ) {
                 Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Standby")
+                Text("Back")
             }
 
             FilledIconButton(
@@ -1973,6 +2039,324 @@ fun RemoteScreen(
     }
 }
 
+// ==================== FEATURE 1: TV NAVIGATION CLUSTER ====================
+@Composable
+fun NavigationCluster(
+    onHome: () -> Unit,
+    onBack: () -> Unit,
+    onMenu: () -> Unit,
+    onStandby: () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Home
+        OutlinedButton(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onHome()
+            },
+            modifier = Modifier.weight(1f).height(58.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = GtvSurfaceVariant,
+                contentColor = GtvPrimary
+            ),
+            border = BorderStroke(1.dp, GtvBorder),
+            contentPadding = PaddingValues(2.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Icon(Icons.Default.Home, contentDescription = "Home", modifier = Modifier.size(20.dp))
+                Spacer(Modifier.height(2.dp))
+                Text("Home", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+            }
+        }
+
+        // Back
+        OutlinedButton(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onBack()
+            },
+            modifier = Modifier.weight(1f).height(58.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = GtvSurfaceVariant,
+                contentColor = GtvTextPrimary
+            ),
+            border = BorderStroke(1.dp, GtvBorder),
+            contentPadding = PaddingValues(2.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", modifier = Modifier.size(20.dp))
+                Spacer(Modifier.height(2.dp))
+                Text("Back", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+            }
+        }
+
+        // Menu
+        OutlinedButton(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onMenu()
+            },
+            modifier = Modifier.weight(1f).height(58.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = GtvSurfaceVariant,
+                contentColor = GtvSecondary
+            ),
+            border = BorderStroke(1.dp, GtvBorder),
+            contentPadding = PaddingValues(2.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Icon(Icons.Default.Menu, contentDescription = "Menu", modifier = Modifier.size(20.dp))
+                Spacer(Modifier.height(2.dp))
+                Text("Menu", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+            }
+        }
+
+        // Standby
+        OutlinedButton(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onStandby()
+            },
+            modifier = Modifier.weight(1f).height(58.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = GtvError.copy(alpha = 0.12f),
+                contentColor = GtvError
+            ),
+            border = BorderStroke(1.dp, GtvError.copy(alpha = 0.35f)),
+            contentPadding = PaddingValues(2.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Icon(Icons.Default.PowerSettingsNew, contentDescription = "Standby", modifier = Modifier.size(20.dp))
+                Spacer(Modifier.height(2.dp))
+                Text("Standby", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+            }
+        }
+    }
+}
+
+// ==================== FEATURE 2: REMOTE MODE SELECTOR ====================
+@Composable
+fun RemoteModeSelector(
+    currentMode: String,
+    onModeChange: (String) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = GtvSurface,
+        border = BorderStroke(1.dp, GtvBorder),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // D-Pad Pill
+            Surface(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onModeChange("dpad")
+                },
+                modifier = Modifier.weight(1f).height(38.dp),
+                shape = RoundedCornerShape(10.dp),
+                color = if (currentMode == "dpad") GtvPrimary else Color.Transparent
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.Adjust,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (currentMode == "dpad") GtvOnPrimary else GtvTextSecondary
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "D-Pad Wheel",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (currentMode == "dpad") GtvOnPrimary else GtvTextSecondary
+                    )
+                }
+            }
+
+            // Trackpad Pill
+            Surface(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onModeChange("trackpad")
+                },
+                modifier = Modifier.weight(1f).height(38.dp),
+                shape = RoundedCornerShape(10.dp),
+                color = if (currentMode == "trackpad") GtvPrimary else Color.Transparent
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.TouchApp,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (currentMode == "trackpad") GtvOnPrimary else GtvTextSecondary
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Swipe Trackpad",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (currentMode == "trackpad") GtvOnPrimary else GtvTextSecondary
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ==================== FEATURE 2: SMOOTH GESTURE TRACKPAD ====================
+@Composable
+fun GestureTrackpad(
+    onCommand: (String) -> Unit,
+    onSeekRelative: (Double) -> Unit,
+    onVolumeRelative: (Double) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    var totalDragX by remember { mutableFloatStateOf(0f) }
+    var totalDragY by remember { mutableFloatStateOf(0f) }
+    var feedbackText by remember { mutableStateOf("Swipe to Seek / Vol • Tap for OK") }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = GtvSurface),
+        border = BorderStroke(1.dp, GtvBorder),
+        shape = RoundedCornerShape(26.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Gesture Touchpad", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = GtvTextSecondary)
+            Spacer(Modifier.height(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(GtvSurfaceVariant)
+                    .border(1.dp, GtvPrimary.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                feedbackText = "🔘 Tap: Play / Pause"
+                                onCommand("toggle")
+                            }
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = {
+                                totalDragX = 0f
+                                totalDragY = 0f
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                totalDragX += dragAmount.x
+                                totalDragY += dragAmount.y
+
+                                val absX = kotlin.math.abs(totalDragX)
+                                val absY = kotlin.math.abs(totalDragY)
+                                val threshold = 70f
+
+                                if (absX > threshold && absX > absY) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    if (totalDragX > 0) {
+                                        feedbackText = "⏩ Swipe Right: +15s"
+                                        onSeekRelative(15.0)
+                                    } else {
+                                        feedbackText = "⏪ Swipe Left: -15s"
+                                        onSeekRelative(-15.0)
+                                    }
+                                    totalDragX = 0f
+                                } else if (absY > threshold && absY > absX) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    if (totalDragY < 0) {
+                                        feedbackText = "🔊 Swipe Up: Vol +"
+                                        onVolumeRelative(0.05)
+                                    } else {
+                                        feedbackText = "🔉 Swipe Down: Vol −"
+                                        onVolumeRelative(-0.05)
+                                    }
+                                    totalDragY = 0f
+                                }
+                            },
+                            onDragEnd = {
+                                totalDragX = 0f
+                                totalDragY = 0f
+                            }
+                        )
+                    }
+                    .padding(14.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("▲ Vol +", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                        Text("👆 Swipe or Tap", style = MaterialTheme.typography.labelSmall, color = GtvPrimary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                        Text("▲ Vol +", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(GtvPrimary.copy(alpha = 0.15f))
+                            .border(1.5.dp, GtvPrimary, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.TouchApp, contentDescription = null, tint = GtvPrimary, modifier = Modifier.size(24.dp))
+                            Text("OK", color = GtvPrimary, fontWeight = FontWeight.Black, fontSize = 11.sp)
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("⏪ −15s", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                        Text(feedbackText, style = MaterialTheme.typography.labelSmall, color = GtvSecondary, fontWeight = FontWeight.Medium, fontSize = 11.sp)
+                        Text("+15s ⏩", style = MaterialTheme.typography.labelSmall, color = GtvTextTertiary, fontSize = 10.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ==================== TACTILE D-PAD WHEEL CONTROLLER ====================
 @Composable
 fun TactileRemoteWheel(onCommand: (String) -> Unit) {
     val haptic = LocalHapticFeedback.current
@@ -2212,13 +2596,13 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_background.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#05070E"
+        android:fillColor="#0F131C"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#0D1526"
+        android:fillColor="#181D2A"
         android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
     <path
-        android:fillColor="#152037"
+        android:fillColor="#283248"
         android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
 </vector>
 EOF
@@ -2231,32 +2615,32 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_foreground.xml
     android:viewportHeight="108">
     <!-- Stand -->
     <path
-        android:fillColor="#475569"
+        android:fillColor="#283248"
         android:pathData="M50,72 h8 v6 h-8 z M42,78 h24 v3 h-24 z" />
 
     <!-- Ultra-slim TV Bezel -->
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#8AB4F8"
         android:pathData="M24,30 h60 c3.3,0 6,2.7 6,6 v32 c0,3.3 -2.7,6 -6,6 h-60 c-3.3,0 -6,-2.7 -6,-6 v-32 c0,-3.3 2.7,-6 6,-6 z" />
 
     <!-- Cinema Display Inner Screen -->
     <path
-        android:fillColor="#05070E"
+        android:fillColor="#0F131C"
         android:pathData="M27,33 h54 v28 h-54 z" />
 
     <!-- Luminous Play Mark -->
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#A8C7FA"
         android:pathData="M50,40 l12,7 -12,7 z" />
 
     <!-- Inward Reception Arc Signals -->
     <path
-        android:strokeColor="#818CF8"
+        android:strokeColor="#8AB4F8"
         android:strokeWidth="3"
         android:strokeLineCap="round"
         android:pathData="M40,24 a16,16 0 0,1 28,0" />
     <path
-        android:strokeColor="#00E5FF"
+        android:strokeColor="#A8C7FA"
         android:strokeWidth="3.2"
         android:strokeLineCap="round"
         android:pathData="M34,18 a24,24 0 0,1 40,0" />
@@ -2270,19 +2654,19 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#05070E"
+        android:fillColor="#0F131C"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#475569"
+        android:fillColor="#283248"
         android:pathData="M50,72 h8 v6 h-8 z M42,78 h24 v3 h-24 z" />
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#8AB4F8"
         android:pathData="M24,30 h60 c3.3,0 6,2.7 6,6 v32 c0,3.3 -2.7,6 -6,6 h-60 c-3.3,0 -6,-2.7 -6,-6 v-32 c0,-3.3 2.7,-6 6,-6 z" />
     <path
-        android:fillColor="#05070E"
+        android:fillColor="#0F131C"
         android:pathData="M27,33 h54 v28 h-54 z" />
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#A8C7FA"
         android:pathData="M50,40 l12,7 -12,7 z" />
 </vector>
 EOF
@@ -2296,34 +2680,34 @@ cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
     android:viewportHeight="180">
     <!-- Studio Dark Gradient Background -->
     <path
-        android:fillColor="#05070E"
+        android:fillColor="#0F131C"
         android:pathData="M0,0h320v180h-320z" />
     <path
-        android:fillColor="#0D1627"
+        android:fillColor="#181D2A"
         android:pathData="M0,0 L320,180 L0,180 Z" />
 
     <!-- Left Cinema Display Graphic -->
     <path
-        android:fillColor="#475569"
+        android:fillColor="#283248"
         android:pathData="M66,128 h16 v10 h-16 z M54,138 h40 v4 h-40 z" />
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#8AB4F8"
         android:pathData="M26,54 h96 c4,0 7,3 7,7 v60 c0,4 -3,7 -7,7 h-96 c-4,0 -7,-3 -7,-7 v-60 c0,-4 3,-7 7,-7 z" />
     <path
-        android:fillColor="#05070E"
+        android:fillColor="#0F131C"
         android:pathData="M31,59 h86 v52 h-86 z" />
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#A8C7FA"
         android:pathData="M66,72 l22,13 -22,13 z" />
 
     <!-- Receiving Broadcast Signal Rays -->
     <path
-        android:strokeColor="#818CF8"
+        android:strokeColor="#8AB4F8"
         android:strokeWidth="4"
         android:strokeLineCap="round"
         android:pathData="M56,42 a24,24 0 0,1 36,0" />
     <path
-        android:strokeColor="#00E5FF"
+        android:strokeColor="#A8C7FA"
         android:strokeWidth="4"
         android:strokeLineCap="round"
         android:pathData="M46,32 a36,36 0 0,1 56,0" />
@@ -2331,7 +2715,7 @@ cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
     <!-- "V D O" Typography -->
     <!-- 'V' -->
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#8AB4F8"
         android:pathData="M150,62 L163,116 L176,62 L188,62 L170,126 L156,126 L138,62 Z" />
     <!-- 'D' -->
     <path
@@ -2339,12 +2723,12 @@ cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
         android:pathData="M198,62 H220 C234,62 244,72 244,86 L244,102 C244,116 234,126 220,126 H198 Z M210,74 V114 H219 C227,114 231,109 231,101 V87 C231,79 227,74 219,74 Z" />
     <!-- 'O' -->
     <path
-        android:fillColor="#00E5FF"
+        android:fillColor="#A8C7FA"
         android:pathData="M272,62 C258,62 249,72 249,86 V102 C249,116 258,126 272,126 C286,126 295,116 295,102 V86 C295,72 286,62 272,62 Z M272,74 C279,74 282,79 282,87 V101 C282,109 279,114 272,114 C265,114 262,109 262,101 V87 C262,79 265,74 272,74 Z" />
 
     <!-- Subtitle: "TV • CINEMA RECEIVER" Accent Bar -->
     <path
-        android:fillColor="#818CF8"
+        android:fillColor="#8AB4F8"
         android:pathData="M150,140 h145 v3 h-145 z" />
 </vector>
 EOF
@@ -2976,6 +3360,34 @@ class TvReceiverActivity : Activity() {
                     }
                     showHud("🔲", "Aspect: $label")
                 }
+                "home" -> {
+                    showHud("🏠", "Home")
+                    try {
+                        val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                            addCategory(Intent.CATEGORY_HOME)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        startActivity(homeIntent)
+                    } catch (e: Exception) {
+                        Log.e("VdoTv", "Error launching Home: ${e.message}")
+                    }
+                }
+                "back" -> {
+                    if (isPlayerActive) {
+                        isPlayerActive = false
+                        player.stop()
+                        playerView.visibility = View.GONE
+                        ambientContainer.visibility = View.VISIBLE
+                        showHud("↩", "Back to Standby")
+                    } else {
+                        showHud("↩", "Back")
+                        try {
+                            onBackPressedDispatcher.onBackPressed()
+                        } catch (_: Exception) {
+                            moveTaskToBack(true)
+                        }
+                    }
+                }
                 "stop" -> {
                     isPlayerActive = false
                     player.stop()
@@ -2991,8 +3403,8 @@ class TvReceiverActivity : Activity() {
                     }
                 }
                 "type", "typeAndEnter" -> {
-                    showHud("⌨️", strVal)
                     if (strVal.startsWith("http://") || strVal.startsWith("https://")) {
+                        showHud("🔗", "Opening URL")
                         currentTitle = strVal
                         osdTitle.text = currentTitle
                         ambientContainer.visibility = View.GONE
@@ -3001,6 +3413,9 @@ class TvReceiverActivity : Activity() {
                         player.setMediaItem(MediaItem.fromUri(strVal))
                         player.prepare()
                         player.play()
+                    } else {
+                        val disp = if (strVal.length > 25) strVal.take(22) + "..." else strVal
+                        showHud("🎙️", "\"${disp}\"")
                     }
                 }
             }
@@ -3264,6 +3679,14 @@ class VdoRemoteImeService : InputMethodService() {
                 injectShellText(strVal)
                 injectShellKey(KeyEvent.KEYCODE_ENTER)
             }
+            "home" -> {
+                injectShellKey(KeyEvent.KEYCODE_HOME)
+            }
+            "back" -> {
+                ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK))
+                ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
+                injectShellKey(KeyEvent.KEYCODE_BACK)
+            }
             "key" -> {
                 when (strVal.lowercase()) {
                     "backspace" -> {
@@ -3281,6 +3704,14 @@ class VdoRemoteImeService : InputMethodService() {
                     }
                     "clear" -> {
                         ic?.deleteSurroundingText(100, 100)
+                    }
+                    "home" -> {
+                        injectShellKey(KeyEvent.KEYCODE_HOME)
+                    }
+                    "back" -> {
+                        ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK))
+                        ic?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
+                        injectShellKey(KeyEvent.KEYCODE_BACK)
                     }
                 }
             }
@@ -3320,5 +3751,5 @@ fi
 gradle wrapper --gradle-version 8.7
 ./gradlew :app:assembleRelease :tv:assembleRelease
 
-cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/vdo-remote-release.apk 2>/dev/null || true
-cp tv/build/outputs/apk/release/tv-release.apk tv/build/outputs/apk/release/vdo-tv-release.apk 2>/dev/null || true
+mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/vdo-remote-release.apk 2>/dev/null || true
+mv tv/build/outputs/apk/release/tv-release.apk tv/build/outputs/apk/release/vdo-tv-release.apk 2>/dev/null || true

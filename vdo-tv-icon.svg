@@ -1,23 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512">
-  <!-- Dark Studio Background -->
-  <rect width="108" height="108" fill="#05070E" rx="24"/>
-  <circle cx="54" cy="54" r="46" fill="#0D1526"/>
-  <circle cx="54" cy="54" r="32" fill="#152037"/>
+  <!-- Google TV Velvet Dark Studio Background -->
+  <rect width="108" height="108" fill="#0F131C" rx="24"/>
+  <circle cx="54" cy="54" r="46" fill="#181D2A"/>
+  <circle cx="54" cy="54" r="32" fill="#283248"/>
 
   <!-- TV Stand Base -->
-  <rect x="50" y="72" width="8" height="6" fill="#475569"/>
-  <rect x="42" y="78" width="24" height="3" rx="1.5" fill="#475569"/>
+  <rect x="50" y="72" width="8" height="6" fill="#283248"/>
+  <rect x="42" y="78" width="24" height="3" rx="1.5" fill="#283248"/>
 
   <!-- TV Cinema Bezel -->
-  <rect x="24" y="30" width="60" height="44" rx="6" fill="#00E5FF"/>
+  <rect x="24" y="30" width="60" height="44" rx="6" fill="#8AB4F8"/>
 
   <!-- Cinema Display Inner Screen -->
-  <rect x="27" y="33" width="54" height="28" fill="#05070E"/>
+  <rect x="27" y="33" width="54" height="28" fill="#0F131C"/>
 
   <!-- Play Symbol -->
-  <polygon points="50,40 62,47 50,54" fill="#00E5FF"/>
+  <polygon points="50,40 62,47 50,54" fill="#A8C7FA"/>
 
   <!-- Inward Reception Arc Signals -->
-  <path stroke="#818CF8" stroke-width="3" stroke-linecap="round" fill="none" d="M40,24 a16,16 0 0,1 28,0"/>
-  <path stroke="#00E5FF" stroke-width="3.2" stroke-linecap="round" fill="none" d="M34,18 a24,24 0 0,1 40,0"/>
+  <path stroke="#8AB4F8" stroke-width="3" stroke-linecap="round" fill="none" d="M40,24 a16,16 0 0,1 28,0"/>
+  <path stroke="#A8C7FA" stroke-width="3.2" stroke-linecap="round" fill="none" d="M34,18 a24,24 0 0,1 40,0"/>
 </svg>
