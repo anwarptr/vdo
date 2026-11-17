@@ -99,7 +99,7 @@ cat << 'EOF' > app/src/main/res/values/strings.xml
 </resources>
 EOF
 
-# App Vector Icons (VDO Remote)
+# Modern Professional App Vector Icons (VDO Remote)
 cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -107,14 +107,14 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#070B14"
+        android:fillColor="#060913"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#111B2E"
+        android:fillColor="#0E1626"
         android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
     <path
-        android:fillColor="#1A2744"
-        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+        android:fillColor="#152037"
+        android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
 </vector>
 EOF
 
@@ -124,43 +124,53 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Smartphone Remote Body with VDO Cyan Finish -->
+    <!-- Outer Signal Waves -->
+    <path
+        android:strokeColor="#818CF8"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M81,38 a26,26 0 0,1 0,32" />
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:pathData="M75,44 a18,18 0 0,1 0,20" />
+    <path
+        android:strokeColor="#818CF8"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M27,38 a26,26 0 0,0 0,32" />
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:pathData="M33,44 a18,18 0 0,0 0,20" />
+
+    <!-- Sleek Remote Contour Body -->
     <path
         android:fillColor="#00E5FF"
         android:pathData="M43,26 h22 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 h-22 c-3.3,0 -6,-2.7 -6,-6 v-44 c0,-3.3 2.7,-6 6,-6 z" />
-    <!-- Remote Screen Inner -->
+
+    <!-- Inset Display Screen -->
     <path
-        android:fillColor="#070B14"
-        android:pathData="M41,34 h26 v28 h-26 z" />
-    <!-- Play Icon Core -->
+        android:fillColor="#060913"
+        android:pathData="M41,33 h26 v28 h-26 z" />
+
+    <!-- Sharp Play Emblem -->
     <path
         android:fillColor="#00E5FF"
-        android:pathData="M50,42 l12,6 -12,6 z" />
-    <!-- Remote Keypad Matrix -->
+        android:pathData="M50,42 l12,5 -12,5 z" />
+
+    <!-- Remote Navigation Circle -->
     <path
-        android:fillColor="#070B14"
-        android:pathData="M45,68 h4 v4 h-4 z M52,68 h4 v4 h-4 z M59,68 h4 v4 h-4 z" />
-    <!-- VDO Cast Waves -->
+        android:fillColor="#060913"
+        android:pathData="M54,69 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
     <path
-        android:strokeColor="#8B5CF6"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:pathData="M76,42 a18,18 0 0,1 0,24" />
+        android:fillColor="#060913"
+        android:pathData="M45,69 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
     <path
-        android:strokeColor="#00E5FF"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:pathData="M83,36 a26,26 0 0,1 0,36" />
-    <path
-        android:strokeColor="#8B5CF6"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:pathData="M32,42 a18,18 0 0,0 0,24" />
-    <path
-        android:strokeColor="#00E5FF"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:pathData="M25,36 a26,26 0 0,0 0,36" />
+        android:fillColor="#060913"
+        android:pathData="M63,69 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
 </vector>
 EOF
 
@@ -171,30 +181,30 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#070B14"
+        android:fillColor="#060913"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#111B2E"
+        android:fillColor="#0E1626"
         android:pathData="M54,54m-44,0a44,44 0,1 1,88 0a44,44 0,1 1,-88 0" />
     <path
         android:fillColor="#00E5FF"
         android:pathData="M43,26 h22 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 h-22 c-3.3,0 -6,-2.7 -6,-6 v-44 c0,-3.3 2.7,-6 6,-6 z" />
     <path
-        android:fillColor="#070B14"
-        android:pathData="M41,34 h26 v28 h-26 z" />
+        android:fillColor="#060913"
+        android:pathData="M41,33 h26 v28 h-26 z" />
     <path
         android:fillColor="#00E5FF"
-        android:pathData="M50,42 l12,6 -12,6 z" />
+        android:pathData="M50,42 l12,5 -12,5 z" />
     <path
-        android:strokeColor="#8B5CF6"
-        android:strokeWidth="3.5"
+        android:strokeColor="#818CF8"
+        android:strokeWidth="3.2"
         android:strokeLineCap="round"
-        android:pathData="M76,42 a18,18 0 0,1 0,24" />
+        android:pathData="M76,43 a18,18 0 0,1 0,22" />
     <path
         android:strokeColor="#00E5FF"
-        android:strokeWidth="3.5"
+        android:strokeWidth="3.2"
         android:strokeLineCap="round"
-        android:pathData="M83,36 a26,26 0 0,1 0,36" />
+        android:pathData="M83,37 a26,26 0 0,1 0,34" />
 </vector>
 EOF
 
@@ -519,13 +529,11 @@ class CastServerService : Service() {
                 newFixedLengthResponse(Response.Status.PARTIAL_CONTENT, mime, fis, length).apply {
                     addHeader("Accept-Ranges", "bytes")
                     addHeader("Content-Range", "bytes $start-$end/${if (fileSize > 0) fileSize.toString() else "*"}")
-                    // NanoHTTPD automatically adds Content-Length from length; avoid duplicate headers
                 }
             } else {
                 val fis = ParcelFileDescriptor.AutoCloseInputStream(pfd)
                 newFixedLengthResponse(Response.Status.OK, mime, fis, if (fileSize > 0) fileSize else -1).apply {
                     addHeader("Accept-Ranges", "bytes")
-                    // NanoHTTPD automatically adds Content-Length from fileSize; avoid duplicate headers
                 }
             }
         }
@@ -545,21 +553,21 @@ class CastServerService : Service() {
           /* Ambient Standby Mode */
           #ambient {
             position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: radial-gradient(circle at 50% 40%, #172554 0%, #0c1222 55%, #030712 100%);
+            background: radial-gradient(circle at 50% 38%, #111e38 0%, #060a14 60%, #020409 100%);
             z-index: 10; transition: opacity 0.4s ease;
           }
           .brand-logo { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-          .logo-icon { width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(135deg, #00e5ff, #3b82f6); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0, 229, 255, 0.45); }
-          .logo-icon svg { width: 34px; height: 34px; fill: #fff; }
-          .brand-title { font-size: 42px; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(90deg, #00e5ff, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-          .clock { font-size: 76px; font-weight: 200; letter-spacing: 2px; color: #f8fafc; text-shadow: 0 2px 12px rgba(0,0,0,0.6); margin-bottom: 6px; }
+          .logo-icon { width: 62px; height: 62px; border-radius: 18px; background: linear-gradient(135deg, #00e5ff, #3b82f6); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 35px rgba(0, 229, 255, 0.45); }
+          .logo-icon svg { width: 36px; height: 36px; fill: #fff; }
+          .brand-title { font-size: 46px; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(90deg, #00e5ff, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+          .clock { font-size: 80px; font-weight: 200; letter-spacing: 2px; color: #f8fafc; text-shadow: 0 2px 14px rgba(0,0,0,0.6); margin-bottom: 6px; }
           .date { font-size: 20px; color: #94a3b8; margin-bottom: 36px; text-transform: uppercase; letter-spacing: 1.5px; }
 
           .status-card {
-            background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 18px 30px; border-radius: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 18px 32px; border-radius: 22px; display: flex; align-items: center; gap: 16px; box-shadow: 0 10px 36px rgba(0,0,0,0.55);
           }
-          .pulse-dot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 12px #22c55e; animation: pulse 2s infinite; }
+          .pulse-dot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 14px #22c55e; animation: pulse 2s infinite; }
           @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.4; transform: scale(0.9); } }
           .status-text { font-size: 18px; font-weight: 600; color: #f1f5f9; }
           .status-sub { font-size: 14px; color: #94a3b8; }
@@ -573,7 +581,7 @@ class CastServerService : Service() {
           /* Cinematic On-Screen Display (OSD) */
           #osd {
             position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
-            padding: 40px 60px; background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 22%, transparent 75%, rgba(0,0,0,0.9) 100%);
+            padding: 40px 60px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 22%, transparent 75%, rgba(0,0,0,0.92) 100%);
             opacity: 0; transition: opacity 0.35s ease;
           }
           #osd.visible { opacity: 1; }
@@ -592,10 +600,10 @@ class CastServerService : Service() {
           /* HUD Center Alert Toast */
           #hud {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(11, 15, 25, 0.9); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(11, 15, 25, 0.92); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.16);
             padding: 18px 36px; border-radius: 24px; display: flex; align-items: center; gap: 16px;
             z-index: 30; opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 12px 42px rgba(0,0,0,0.65);
           }
           #hud.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
           .hud-icon { font-size: 32px; }
@@ -800,7 +808,6 @@ class CastServerService : Service() {
                   playPromise.then(() => {
                     v.muted = false;
                   }).catch((err) => {
-                    // If unmuted autoplay blocked, start muted then unmute immediately
                     v.muted = true;
                     v.play().then(() => {
                       setTimeout(() => { v.muted = false; }, 200);
@@ -924,6 +931,7 @@ class CastServerService : Service() {
 }
 EOF
 
+# ==================== MODERN ERGONOMIC REMOTE UI (:app) ====================
 cat << 'EOF' > app/src/main/java/com/example/lancast/MainActivity.kt
 package com.example.lancast
 
@@ -939,6 +947,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -961,6 +970,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity() {
 
@@ -998,20 +1008,20 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val darkScheme = darkColorScheme(
+            val luxuryDarkScheme = darkColorScheme(
                 primary = Color(0xFF00E5FF),
-                onPrimary = Color(0xFF0B0F19),
-                primaryContainer = Color(0xFF1E293B),
+                onPrimary = Color(0xFF060913),
+                primaryContainer = Color(0xFF131D31),
                 onPrimaryContainer = Color(0xFF38BDF8),
                 secondary = Color(0xFF818CF8),
-                background = Color(0xFF070B14),
-                surface = Color(0xFF111827),
+                background = Color(0xFF060913),
+                surface = Color(0xFF0E1424),
                 onSurface = Color(0xFFF8FAFC),
-                surfaceVariant = Color(0xFF1E293B),
+                surfaceVariant = Color(0xFF152037),
                 onSurfaceVariant = Color(0xFF94A3B8)
             )
 
-            MaterialTheme(colorScheme = darkScheme) {
+            MaterialTheme(colorScheme = luxuryDarkScheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     VdoRemoteScreen(initialUri = sharedUri)
                 }
@@ -1103,18 +1113,18 @@ fun VdoRemoteScreen(initialUri: Uri?) {
     if (showInfoDialog) {
         AlertDialog(
             onDismissRequest = { showInfoDialog = false },
-            title = { Text("VDO Cast Network Info", fontWeight = FontWeight.Bold) },
+            title = { Text("VDO Cast Connection", fontWeight = FontWeight.Bold) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Phone Local IP: ${getLocalWifiIp(context)}:5050")
-                    Text("mDNS Service: _vdocast._tcp. (VDOCastPhone)")
-                    Text("TV Status: ${if (isConnected) "Connected & Syncing" else "Standby (Waiting for TV connection)"}")
-                    Divider(modifier = Modifier.padding(vertical = 4.dp))
-                    Text("Tip: Open VDO TV on your TX3 Mini box. It automatically discovers this phone and connects.", style = MaterialTheme.typography.bodySmall)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Phone Wi-Fi IP: ${getLocalWifiIp(context)}:5050")
+                    Text("Receiver: VDO TV (TX3 Mini)")
+                    Text("State: ${if (isConnected) "Live Synced" else "Standby (Waiting for TV)"}")
+                    Divider(color = Color(0xFF1E293B))
+                    Text("Ensure your TX3 Mini box is open on VDO TV and connected to the same Wi-Fi.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showInfoDialog = false }) { Text("OK") }
+                TextButton(onClick = { showInfoDialog = false }) { Text("Done", fontWeight = FontWeight.Bold) }
             }
         )
     }
@@ -1123,83 +1133,102 @@ fun VdoRemoteScreen(initialUri: Uri?) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(18.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top Header
+        // Top Modern Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
                         .background(Brush.linearGradient(listOf(Color(0xFF00E5FF), Color(0xFF3B82F6)))),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Tv, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Tv, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
                 }
                 Column {
-                    Text("VDO Remote", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-                    Text("VDO Cast • Universal TV Remote", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("VDO Remote", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp)
+                    Text("VDO Cast Suite", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = if (isConnected) Color(0xFF22C55E).copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.clickable { showInfoDialog = true }
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                // Connection Status Chip
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isConnected) Color(0xFF22C55E).copy(alpha = 0.15f) else Color(0xFF1E293B),
+                    border = BorderStroke(1.dp, if (isConnected) Color(0xFF22C55E).copy(alpha = 0.4f) else Color(0xFF334155)),
+                    modifier = Modifier.clickable { showInfoDialog = true }
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(if (isConnected) Color(0xFF22C55E) else MaterialTheme.colorScheme.primary)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF))
+                        )
+                        Text(
+                            if (isConnected) "VDO TV" else "Wi-Fi Ready",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isConnected) Color(0xFF22C55E) else Color(0xFF00E5FF)
+                        )
+                    }
+                }
+
+                // TV Standby / Power Button
+                FilledTonalIconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        CastServerService.pushCommand("stop")
+                    },
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = Color(0xFF1E293B),
+                        contentColor = Color(0xFFEF4444)
                     )
-                    Text(
-                        if (isConnected) "TV Synced" else "Wi-Fi Ready",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isConnected) Color(0xFF22C55E) else MaterialTheme.colorScheme.primary
-                    )
+                ) {
+                    Icon(Icons.Default.PowerSettingsNew, contentDescription = "TV Standby", modifier = Modifier.size(18.dp))
                 }
             }
         }
 
-        // Primary Select Video Button
-        Button(
-            onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-        ) {
-            Icon(Icons.Default.VideoLibrary, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
-            Spacer(Modifier.width(8.dp))
-            Text(
-                if (selectedUri == null) "Select Video to Cast" else "Choose Another Video",
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-
-        // Playback Card with Live Scrubber
-        PlaybackControlCard(
+        // Now Playing & Live Scrubber Card
+        NowPlayingCard(
             title = if (tvStatus.title.isNotEmpty()) tvStatus.title else CastServerService.currentVideoTitle,
             status = tvStatus.status,
             currentTime = tvStatus.currentTime,
             duration = tvStatus.duration
         )
 
-        // TV Directional D-Pad Section
-        DPadNavigationCard(onCommand = { cmd ->
+        // Transport Controls Row (Skip -10s, Hero Play/Pause, Skip +10s)
+        HeroTransportRow(
+            isPlaying = tvStatus.status == "playing",
+            onToggle = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                CastServerService.pushCommand("toggle")
+            },
+            onSeek = { offset ->
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                CastServerService.pushCommand("seekRelative", offset)
+            }
+        )
+
+        // TV Directional Navigation Wheel (D-Pad)
+        TactileRemoteWheel(onCommand = { cmd ->
             when (cmd) {
                 "up" -> CastServerService.pushCommand("seekRelative", 30.0)
                 "down" -> CastServerService.pushCommand("seekRelative", -30.0)
@@ -1211,89 +1240,96 @@ fun VdoRemoteScreen(initialUri: Uri?) {
             }
         })
 
-        // Volume & Mute Section
-        VolumeControlCard(volume = tvStatus.volume, isMuted = tvStatus.muted)
+        // Volume Capsule Slider
+        VolumeCapsuleCard(volume = tvStatus.volume, isMuted = tvStatus.muted)
 
-        // Quick Actions Section (Speed, Aspect Ratio)
-        QuickActionsCard(currentSpeed = tvStatus.playbackRate, currentAspect = tvStatus.aspectRatio)
+        // Quick Controls (Speed & Aspect Ratio)
+        QuickModifiersCard(currentSpeed = tvStatus.playbackRate, currentAspect = tvStatus.aspectRatio)
 
-        // Stop & Standby Button
-        OutlinedButton(
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                CastServerService.pushCommand("stop")
-            },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+        // Select / Change Video Primary Action Button
+        Button(
+            onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Icon(Icons.Default.Stop, contentDescription = null)
-            Spacer(Modifier.width(6.dp))
-            Text("Stop Playback (Return TV to Standby)")
+            Icon(Icons.Default.VideoLibrary, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(
+                if (selectedUri == null) "Select Video to Cast" else "Change Video",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = Color.Black
+            )
         }
     }
 }
 
 @Composable
-fun PlaybackControlCard(
+fun NowPlayingCard(
     title: String,
     status: String,
     currentTime: Double,
     duration: Double
 ) {
-    val haptic = LocalHapticFeedback.current
     var isDragging by remember { mutableStateOf(false) }
     var dragVal by remember { mutableFloatStateOf(0f) }
 
     val effectiveTime = if (isDragging) dragVal.toDouble() else currentTime
     val maxDuration = if (duration > 0) duration.toFloat() else 1f
-    val isPlaying = status == "playing"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
+        border = BorderStroke(1.dp, Color(0xFF1E293B)),
         shape = RoundedCornerShape(20.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = title.ifEmpty { "Select a video to stream" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title.ifEmpty { "Select a video to stream" },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (duration > 0) "Total length: ${formatTime(duration)}" else "No stream active",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(10.dp),
                     color = when (status) {
-                        "playing" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        "paused" -> Color(0xFFF59E0B).copy(alpha = 0.2f)
-                        "buffering" -> Color(0xFF8B5CF6).copy(alpha = 0.2f)
-                        else -> MaterialTheme.colorScheme.surfaceVariant
+                        "playing" -> Color(0xFF00E5FF).copy(alpha = 0.15f)
+                        "paused" -> Color(0xFFF59E0B).copy(alpha = 0.15f)
+                        "buffering" -> Color(0xFF8B5CF6).copy(alpha = 0.15f)
+                        else -> Color(0xFF1E293B)
                     }
                 ) {
                     Text(
                         text = status.uppercase(),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = when (status) {
-                            "playing" -> MaterialTheme.colorScheme.primary
+                            "playing" -> Color(0xFF00E5FF)
                             "paused" -> Color(0xFFF59E0B)
                             "buffering" -> Color(0xFF8B5CF6)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            else -> Color(0xFF64748B)
                         }
                     )
                 }
             }
 
-            // Timeline Scrubber Slider
+            // Scrubber Slider
             Slider(
                 value = effectiveTime.toFloat().coerceIn(0f, maxDuration),
                 onValueChange = {
@@ -1305,152 +1341,183 @@ fun PlaybackControlCard(
                     CastServerService.pushCommand("seekAbsolute", dragVal.toDouble())
                 },
                 valueRange = 0f..maxDuration,
-                enabled = duration > 0
+                enabled = duration > 0,
+                colors = SliderDefaults.colors(
+                    thumbColor = Color(0xFF00E5FF),
+                    activeTrackColor = Color(0xFF00E5FF),
+                    inactiveTrackColor = Color(0xFF1E293B)
+                )
             )
 
-            // Elapsed and Total Time
+            // Timestamps
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatTime(effectiveTime), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                Text(formatTime(duration), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-
-            // Transport Buttons Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        CastServerService.pushCommand("seekRelative", -30.0)
-                    },
-                    modifier = Modifier.size(46.dp)
-                ) {
-                    Icon(Icons.Default.Replay30, "-30s")
+                Text(formatTime(effectiveTime), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                if (duration > 0) {
+                    Text("-${formatTime(duration - effectiveTime)}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF64748B))
                 }
-
-                OutlinedIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        CastServerService.pushCommand("seekRelative", -10.0)
-                    },
-                    modifier = Modifier.size(46.dp)
-                ) {
-                    Icon(Icons.Default.Replay10, "-10s")
-                }
-
-                FilledIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        CastServerService.pushCommand("toggle")
-                    },
-                    modifier = Modifier.size(68.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(
-                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = "Play/Pause",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-
-                OutlinedIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        CastServerService.pushCommand("seekRelative", 10.0)
-                    },
-                    modifier = Modifier.size(46.dp)
-                ) {
-                    Icon(Icons.Default.Forward10, "+10s")
-                }
-
-                OutlinedIconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        CastServerService.pushCommand("seekRelative", 30.0)
-                    },
-                    modifier = Modifier.size(46.dp)
-                ) {
-                    Icon(Icons.Default.Forward30, "+30s")
-                }
+                Text(formatTime(duration), style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
             }
         }
     }
 }
 
 @Composable
-fun DPadNavigationCard(onCommand: (String) -> Unit) {
+fun HeroTransportRow(
+    isPlaying: Boolean,
+    onToggle: () -> Unit,
+    onSeek: (Double) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // -30s
+        FilledTonalIconButton(
+            onClick = { onSeek(-30.0) },
+            modifier = Modifier.size(50.dp),
+            shape = CircleShape,
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF111827), contentColor = Color(0xFF94A3B8))
+        ) {
+            Icon(Icons.Default.Replay30, "-30s", modifier = Modifier.size(24.dp))
+        }
+
+        // -10s
+        FilledTonalIconButton(
+            onClick = { onSeek(-10.0) },
+            modifier = Modifier.size(54.dp),
+            shape = CircleShape,
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF152037), contentColor = Color(0xFF00E5FF))
+        ) {
+            Icon(Icons.Default.Replay10, "-10s", modifier = Modifier.size(26.dp))
+        }
+
+        // HERO PLAY/PAUSE BUTTON
+        FilledIconButton(
+            onClick = onToggle,
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
+        ) {
+            Icon(
+                if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                contentDescription = "Play/Pause",
+                tint = Color.Black,
+                modifier = Modifier.size(38.dp)
+            )
+        }
+
+        // +10s
+        FilledTonalIconButton(
+            onClick = { onSeek(10.0) },
+            modifier = Modifier.size(54.dp),
+            shape = CircleShape,
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF152037), contentColor = Color(0xFF00E5FF))
+        ) {
+            Icon(Icons.Default.Forward10, "+10s", modifier = Modifier.size(26.dp))
+        }
+
+        // +30s
+        FilledTonalIconButton(
+            onClick = { onSeek(30.0) },
+            modifier = Modifier.size(50.dp),
+            shape = CircleShape,
+            colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFF111827), contentColor = Color(0xFF94A3B8))
+        ) {
+            Icon(Icons.Default.Forward30, "+30s", modifier = Modifier.size(24.dp))
+        }
+    }
+}
+
+@Composable
+fun TactileRemoteWheel(onCommand: (String) -> Unit) {
     val haptic = LocalHapticFeedback.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(20.dp)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
+        border = BorderStroke(1.dp, Color(0xFF1E293B)),
+        shape = RoundedCornerShape(24.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier.padding(20.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("TV Remote Navigation", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(12.dp))
+            Text("TV Navigation", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
+            Spacer(Modifier.height(14.dp))
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                FilledTonalIconButton(
+            // Unified Tactile Wheel Disc
+            Box(
+                modifier = Modifier
+                    .size(210.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF131D31)),
+                contentAlignment = Alignment.Center
+            ) {
+                // UP
+                IconButton(
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("up") },
-                    modifier = Modifier.size(52.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(52.dp)
                 ) {
-                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up")
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
                 }
-                Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    FilledTonalIconButton(
-                        onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("left") },
-                        modifier = Modifier.size(52.dp)
-                    ) {
-                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Left")
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    FilledIconButton(
-                        onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("ok") },
-                        modifier = Modifier.size(60.dp),
-                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text("OK", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    FilledTonalIconButton(
-                        onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("right") },
-                        modifier = Modifier.size(52.dp)
-                    ) {
-                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Right")
-                    }
+
+                // LEFT
+                IconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("left") },
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp).size(52.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Left", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
                 }
-                Spacer(Modifier.height(4.dp))
-                FilledTonalIconButton(
+
+                // CENTER OK DISC
+                FilledIconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("ok") },
+                    modifier = Modifier.size(72.dp),
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF00E5FF))
+                ) {
+                    Text("OK", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color.Black)
+                }
+
+                // RIGHT
+                IconButton(
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("right") },
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(52.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Right", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
+                }
+
+                // DOWN
+                IconButton(
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("down") },
-                    modifier = Modifier.size(52.dp)
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp).size(52.dp)
                 ) {
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down")
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", tint = Color(0xFF00E5FF), modifier = Modifier.size(32.dp))
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(18.dp))
+
+            // Flanking Buttons: Standby & Menu
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 OutlinedButton(
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("back") },
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFF334155))
                 ) {
                     Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("TV Standby")
+                    Text("Standby")
                 }
+
                 OutlinedButton(
                     onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onCommand("menu") },
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFF334155))
                 ) {
                     Icon(Icons.Default.Menu, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
@@ -1462,28 +1529,30 @@ fun DPadNavigationCard(onCommand: (String) -> Unit) {
 }
 
 @Composable
-fun VolumeControlCard(volume: Float, isMuted: Boolean) {
+fun VolumeCapsuleCard(volume: Float, isMuted: Boolean) {
     val haptic = LocalHapticFeedback.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
+        border = BorderStroke(1.dp, Color(0xFF1E293B)),
         shape = RoundedCornerShape(20.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(18.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("TV Volume", style = MaterialTheme.typography.titleMedium)
+                Text("TV Audio Volume", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 Text(
                     if (isMuted) "MUTED" else "${(volume * 100).toInt()}%",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF)
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1496,14 +1565,19 @@ fun VolumeControlCard(volume: Float, isMuted: Boolean) {
                     Icon(
                         if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
                         contentDescription = "Mute",
-                        tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        tint = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF)
                     )
                 }
                 Slider(
                     value = volume,
                     onValueChange = { CastServerService.pushCommand("setVolume", it.toDouble()) },
                     valueRange = 0f..1f,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = SliderDefaults.colors(
+                        thumbColor = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF),
+                        activeTrackColor = if (isMuted) Color(0xFFEF4444) else Color(0xFF00E5FF),
+                        inactiveTrackColor = Color(0xFF1E293B)
+                    )
                 )
             }
         }
@@ -1511,18 +1585,19 @@ fun VolumeControlCard(volume: Float, isMuted: Boolean) {
 }
 
 @Composable
-fun QuickActionsCard(currentSpeed: Float, currentAspect: String) {
+fun QuickModifiersCard(currentSpeed: Float, currentAspect: String) {
     val haptic = LocalHapticFeedback.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E1424)),
+        border = BorderStroke(1.dp, Color(0xFF1E293B)),
         shape = RoundedCornerShape(20.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Quick Actions", style = MaterialTheme.typography.titleMedium)
-
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            // Speed Section
             Column {
-                Text("Playback Speed", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Playback Speed", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
                 Spacer(Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val speeds = listOf(0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
@@ -1534,15 +1609,16 @@ fun QuickActionsCard(currentSpeed: Float, currentAspect: String) {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 CastServerService.pushCommand("setSpeed", sp.toDouble())
                             },
-                            label = { Text("${sp}x") },
+                            label = { Text("${sp}x", fontSize = 12.sp) },
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
             }
 
+            // Aspect Ratio Section
             Column {
-                Text("Aspect Ratio", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Screen Aspect Ratio", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color(0xFF94A3B8))
                 Spacer(Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val aspects = listOf("contain" to "Fit", "cover" to "Fill", "fill" to "Stretch")
@@ -1554,7 +1630,7 @@ fun QuickActionsCard(currentSpeed: Float, currentAspect: String) {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 CastServerService.pushCommand("setAspect", 0.0, mode)
                             },
-                            label = { Text(label) },
+                            label = { Text(label, fontSize = 12.sp) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -1615,7 +1691,7 @@ cat << 'EOF' > tv/src/main/res/values/strings.xml
 </resources>
 EOF
 
-# TV Vector Icons & Leanback Banner (VDO TV)
+# Modern Professional TV Vector Icons & Leanback Banner
 cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_background.xml
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -1623,11 +1699,14 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_background.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#070A12"
+        android:fillColor="#05070E"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#111827"
+        android:fillColor="#0D1526"
         android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
+    <path
+        android:fillColor="#152037"
+        android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
 </vector>
 EOF
 
@@ -1637,23 +1716,27 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_foreground.xml
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- TV Stand -->
+    <!-- Stand -->
     <path
         android:fillColor="#475569"
         android:pathData="M50,72 h8 v6 h-8 z M42,78 h24 v3 h-24 z" />
-    <!-- TV Outer Display Frame -->
+
+    <!-- Ultra-slim TV Bezel -->
     <path
         android:fillColor="#00E5FF"
         android:pathData="M24,30 h60 c3.3,0 6,2.7 6,6 v32 c0,3.3 -2.7,6 -6,6 h-60 c-3.3,0 -6,-2.7 -6,-6 v-32 c0,-3.3 2.7,-6 6,-6 z" />
-    <!-- TV Inner Screen Area -->
+
+    <!-- Cinema Display Inner Screen -->
     <path
-        android:fillColor="#070A12"
+        android:fillColor="#05070E"
         android:pathData="M27,33 h54 v28 h-54 z" />
-    <!-- Play Core Symbol -->
+
+    <!-- Luminous Play Mark -->
     <path
         android:fillColor="#00E5FF"
         android:pathData="M50,40 l12,7 -12,7 z" />
-    <!-- Radiating Signal Arc -->
+
+    <!-- Inward Reception Arc Signals -->
     <path
         android:strokeColor="#818CF8"
         android:strokeWidth="3"
@@ -1661,7 +1744,7 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_foreground.xml
         android:pathData="M40,24 a16,16 0 0,1 28,0" />
     <path
         android:strokeColor="#00E5FF"
-        android:strokeWidth="3"
+        android:strokeWidth="3.2"
         android:strokeLineCap="round"
         android:pathData="M34,18 a24,24 0 0,1 40,0" />
 </vector>
@@ -1674,7 +1757,7 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher.xml
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#070A12"
+        android:fillColor="#05070E"
         android:pathData="M0,0h108v108h-108z" />
     <path
         android:fillColor="#475569"
@@ -1683,7 +1766,7 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher.xml
         android:fillColor="#00E5FF"
         android:pathData="M24,30 h60 c3.3,0 6,2.7 6,6 v32 c0,3.3 -2.7,6 -6,6 h-60 c-3.3,0 -6,-2.7 -6,-6 v-32 c0,-3.3 2.7,-6 6,-6 z" />
     <path
-        android:fillColor="#070A12"
+        android:fillColor="#05070E"
         android:pathData="M27,33 h54 v28 h-54 z" />
     <path
         android:fillColor="#00E5FF"
@@ -1691,21 +1774,22 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher.xml
 </vector>
 EOF
 
-# Widescreen 16:9 Leanback TV Launcher Banner for VDO TV
+# Premium Widescreen 16:9 Leanback TV Launcher Banner for VDO TV (320x180 dp)
 cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="320dp"
     android:height="180dp"
     android:viewportWidth="320"
     android:viewportHeight="180">
-    <!-- Cinema Dark Background -->
+    <!-- Studio Dark Gradient Background -->
     <path
-        android:fillColor="#070B14"
+        android:fillColor="#05070E"
         android:pathData="M0,0h320v180h-320z" />
     <path
-        android:fillColor="#111B2E"
+        android:fillColor="#0D1627"
         android:pathData="M0,0 L320,180 L0,180 Z" />
-    <!-- Left TV Screen Frame -->
+
+    <!-- Left Cinema Display Graphic -->
     <path
         android:fillColor="#475569"
         android:pathData="M66,128 h16 v10 h-16 z M54,138 h40 v4 h-40 z" />
@@ -1713,12 +1797,13 @@ cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
         android:fillColor="#00E5FF"
         android:pathData="M26,54 h96 c4,0 7,3 7,7 v60 c0,4 -3,7 -7,7 h-96 c-4,0 -7,-3 -7,-7 v-60 c0,-4 3,-7 7,-7 z" />
     <path
-        android:fillColor="#070B14"
+        android:fillColor="#05070E"
         android:pathData="M31,59 h86 v52 h-86 z" />
     <path
         android:fillColor="#00E5FF"
         android:pathData="M66,72 l22,13 -22,13 z" />
-    <!-- Cast Signal Beam -->
+
+    <!-- Receiving Broadcast Signal Rays -->
     <path
         android:strokeColor="#818CF8"
         android:strokeWidth="4"
@@ -1729,7 +1814,8 @@ cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
         android:strokeWidth="4"
         android:strokeLineCap="round"
         android:pathData="M46,32 a36,36 0 0,1 56,0" />
-    <!-- "V D O" Bold Typography on Right -->
+
+    <!-- "V D O" Typography -->
     <!-- 'V' -->
     <path
         android:fillColor="#00E5FF"
@@ -1742,7 +1828,8 @@ cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
     <path
         android:fillColor="#00E5FF"
         android:pathData="M272,62 C258,62 249,72 249,86 V102 C249,116 258,126 272,126 C286,126 295,116 295,102 V86 C295,72 286,62 272,62 Z M272,74 C279,74 282,79 282,87 V101 C282,109 279,114 272,114 C265,114 262,109 262,101 V87 C262,79 265,74 272,74 Z" />
-    <!-- Subtitle: "TV • CINEMA RECEIVER" Indicator Bar -->
+
+    <!-- Subtitle: "TV • CINEMA RECEIVER" Accent Bar -->
     <path
         android:fillColor="#818CF8"
         android:pathData="M150,140 h145 v3 h-145 z" />
@@ -1867,7 +1954,7 @@ class TvReceiverActivity : Activity() {
         }
 
         statusContainer = FrameLayout(this).apply {
-            setBackgroundColor(Color.parseColor("#070B14"))
+            setBackgroundColor(Color.parseColor("#05070E"))
         }
 
         statusText = TextView(this).apply {
@@ -1890,7 +1977,6 @@ class TvReceiverActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        // Re-gain media audio focus when activity resumes
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
         @Suppress("DEPRECATION")
         audioManager?.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
