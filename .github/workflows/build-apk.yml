@@ -65,22 +65,53 @@ jobs:
           DROIDSTORE_API_KEY: ${{ secrets.DROIDSTORE_API_KEY }}
         run: |
           API_URL="${DROIDSTORE_URL%/}/api/apks/upload"
-          RESP_FILE=$(mktemp)
-          HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
-            -F "apk=@tv/build/outputs/apk/release/vdo-tv-release.apk" \
-            -F "appName=VDO TV" \
-            -F "packageName=com.example.lancasttv" \
-            -F "versionName=${{ steps.versioning.outputs.version_name }}" \
-            -F "versionCode=${{ github.run_number }}" \
-            -F "targetPlatforms=tv")
-          
-          echo "DroidStore TV Upload HTTP Status: $HTTP_CODE"
-          cat "$RESP_FILE"
-          echo ""
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "::error::Failed to deploy VDO TV to DroidStore (HTTP $HTTP_CODE)"
+          MAX_RETRIES=3
+          ATTEMPT=1
+          SUCCESS=false
+
+          # Pre-ping DroidStore to wake up backend if spinning down/cold starting
+          echo "Pre-flight ping to DroidStore server..."
+          curl -s -m 25 -A "Mozilla/5.0" "${DROIDSTORE_URL%/}" > /dev/null 2>&1 || true
+          sleep 2
+
+          while [ $ATTEMPT -le $MAX_RETRIES ]; do
+            echo "Uploading VDO TV APK (Attempt $ATTEMPT of $MAX_RETRIES)..."
+            RESP_FILE=$(mktemp)
+            HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
+              --connect-timeout 30 \
+              --max-time 180 \
+              -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+              -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
+              -F "apk=@tv/build/outputs/apk/release/vdo-tv-release.apk" \
+              -F "appName=VDO TV" \
+              -F "packageName=com.example.lancasttv" \
+              -F "versionName=${{ steps.versioning.outputs.version_name }}" \
+              -F "versionCode=${{ github.run_number }}" \
+              -F "targetPlatforms=tv")
+
+            echo "DroidStore TV Upload HTTP Status: $HTTP_CODE"
+            cat "$RESP_FILE"
+            echo ""
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              SUCCESS=true
+              rm -f "$RESP_FILE"
+              break
+            fi
+
+            echo "::warning::Upload attempt $ATTEMPT failed with HTTP $HTTP_CODE"
+            rm -f "$RESP_FILE"
+
+            if [ $ATTEMPT -lt $MAX_RETRIES ]; then
+              WAIT_SEC=$((ATTEMPT * 15))
+              echo "Cloudflare/origin timeout (HTTP $HTTP_CODE). Waiting ${WAIT_SEC}s before retry..."
+              sleep $WAIT_SEC
+            fi
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+          if [ "$SUCCESS" != "true" ]; then
+            echo "::error::Failed to deploy VDO TV to DroidStore after $MAX_RETRIES attempts (Last HTTP $HTTP_CODE)"
             exit 1
           fi
 
@@ -90,21 +121,47 @@ jobs:
           DROIDSTORE_API_KEY: ${{ secrets.DROIDSTORE_API_KEY }}
         run: |
           API_URL="${DROIDSTORE_URL%/}/api/apks/upload"
-          RESP_FILE=$(mktemp)
-          HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
-            -F "apk=@app/build/outputs/apk/release/vdo-remote-release.apk" \
-            -F "appName=VDO Remote" \
-            -F "packageName=com.example.lancast" \
-            -F "versionName=${{ steps.versioning.outputs.version_name }}" \
-            -F "versionCode=${{ github.run_number }}" \
-            -F "targetPlatforms=mobile")
-          
-          echo "DroidStore Remote Upload HTTP Status: $HTTP_CODE"
-          cat "$RESP_FILE"
-          echo ""
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "::error::Failed to deploy VDO Remote to DroidStore (HTTP $HTTP_CODE)"
+          MAX_RETRIES=3
+          ATTEMPT=1
+          SUCCESS=false
+
+          while [ $ATTEMPT -le $MAX_RETRIES ]; do
+            echo "Uploading VDO Remote APK (Attempt $ATTEMPT of $MAX_RETRIES)..."
+            RESP_FILE=$(mktemp)
+            HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
+              --connect-timeout 30 \
+              --max-time 180 \
+              -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+              -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
+              -F "apk=@app/build/outputs/apk/release/vdo-remote-release.apk" \
+              -F "appName=VDO Remote" \
+              -F "packageName=com.example.lancast" \
+              -F "versionName=${{ steps.versioning.outputs.version_name }}" \
+              -F "versionCode=${{ github.run_number }}" \
+              -F "targetPlatforms=mobile")
+
+            echo "DroidStore Remote Upload HTTP Status: $HTTP_CODE"
+            cat "$RESP_FILE"
+            echo ""
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              SUCCESS=true
+              rm -f "$RESP_FILE"
+              break
+            fi
+
+            echo "::warning::Upload attempt $ATTEMPT failed with HTTP $HTTP_CODE"
+            rm -f "$RESP_FILE"
+
+            if [ $ATTEMPT -lt $MAX_RETRIES ]; then
+              WAIT_SEC=$((ATTEMPT * 15))
+              echo "Cloudflare/origin timeout (HTTP $HTTP_CODE). Waiting ${WAIT_SEC}s before retry..."
+              sleep $WAIT_SEC
+            fi
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+          if [ "$SUCCESS" != "true" ]; then
+            echo "::error::Failed to deploy VDO Remote to DroidStore after $MAX_RETRIES attempts (Last HTTP $HTTP_CODE)"
             exit 1
           fi
