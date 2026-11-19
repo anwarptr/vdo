@@ -61,7 +61,7 @@ jobs:
 
       - name: Deploy VDO TV to DroidStore
         run: |
-          curl -f -X POST "${{ secrets.DROIDSTORE_URL }}/api/apks/upload" \
+          curl --fail-with-body -X POST "${{ secrets.DROIDSTORE_URL }}/api/apks/upload" \
             -H "Authorization: Bearer ${{ secrets.DROIDSTORE_API_KEY }}" \
             -F "apk=@tv/build/outputs/apk/release/vdo-tv-release.apk" \
             -F "appName=VDO TV" \
@@ -72,7 +72,7 @@ jobs:
 
       - name: Deploy VDO Remote to DroidStore
         run: |
-          curl -f -X POST "${{ secrets.DROIDSTORE_URL }}/api/apks/upload" \
+          curl --fail-with-body -X POST "${{ secrets.DROIDSTORE_URL }}/api/apks/upload" \
             -H "Authorization: Bearer ${{ secrets.DROIDSTORE_API_KEY }}" \
             -F "apk=@app/build/outputs/apk/release/vdo-remote-release.apk" \
             -F "appName=VDO Remote" \
