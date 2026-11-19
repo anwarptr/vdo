@@ -60,23 +60,49 @@ jobs:
           echo "version_name=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Deploy VDO TV to DroidStore
+        env:
+          DROIDSTORE_URL: ${{ secrets.DROIDSTORE_URL }}
+          DROIDSTORE_API_KEY: ${{ secrets.DROIDSTORE_API_KEY }}
         run: |
-          curl --fail-with-body -X POST "${{ secrets.DROIDSTORE_URL }}/api/apks/upload" \
-            -H "Authorization: Bearer ${{ secrets.DROIDSTORE_API_KEY }}" \
+          API_URL="${DROIDSTORE_URL%/}/api/apks/upload"
+          RESP_FILE=$(mktemp)
+          HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
+            -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
             -F "apk=@tv/build/outputs/apk/release/vdo-tv-release.apk" \
             -F "appName=VDO TV" \
             -F "packageName=com.example.lancasttv" \
             -F "versionName=${{ steps.versioning.outputs.version_name }}" \
             -F "versionCode=${{ github.run_number }}" \
-            -F "targetPlatforms=tv"
+            -F "targetPlatforms=tv")
+          
+          echo "DroidStore TV Upload HTTP Status: $HTTP_CODE"
+          cat "$RESP_FILE"
+          echo ""
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::Failed to deploy VDO TV to DroidStore (HTTP $HTTP_CODE)"
+            exit 1
+          fi
 
       - name: Deploy VDO Remote to DroidStore
+        env:
+          DROIDSTORE_URL: ${{ secrets.DROIDSTORE_URL }}
+          DROIDSTORE_API_KEY: ${{ secrets.DROIDSTORE_API_KEY }}
         run: |
-          curl --fail-with-body -X POST "${{ secrets.DROIDSTORE_URL }}/api/apks/upload" \
-            -H "Authorization: Bearer ${{ secrets.DROIDSTORE_API_KEY }}" \
+          API_URL="${DROIDSTORE_URL%/}/api/apks/upload"
+          RESP_FILE=$(mktemp)
+          HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
+            -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
             -F "apk=@app/build/outputs/apk/release/vdo-remote-release.apk" \
             -F "appName=VDO Remote" \
             -F "packageName=com.example.lancast" \
             -F "versionName=${{ steps.versioning.outputs.version_name }}" \
             -F "versionCode=${{ github.run_number }}" \
-            -F "targetPlatforms=mobile"
+            -F "targetPlatforms=mobile")
+          
+          echo "DroidStore Remote Upload HTTP Status: $HTTP_CODE"
+          cat "$RESP_FILE"
+          echo ""
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::Failed to deploy VDO Remote to DroidStore (HTTP $HTTP_CODE)"
+            exit 1
+          fi
