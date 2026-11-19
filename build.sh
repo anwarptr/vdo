@@ -4589,7 +4589,13 @@ if [ ! -f release.keystore ]; then
     keytool -genkeypair -v -keystore release.keystore -alias vdocast -keyalg RSA -keysize 2048 -validity 10000 -storepass vdocast -keypass vdocast -dname "CN=VDOCast, O=VDOCast, C=US"
 fi
 
-gradle wrapper --gradle-version 8.7
+if [ ! -f gradlew ]; then
+    mkdir -p .gw-boot
+    (cd .gw-boot && gradle wrapper --gradle-version 8.7)
+    cp -r .gw-boot/* .
+    rm -rf .gw-boot
+fi
+chmod +x gradlew
 ./gradlew :app:assembleRelease :tv:assembleRelease
 
 mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/vdo-remote-release.apk 2>/dev/null || true
