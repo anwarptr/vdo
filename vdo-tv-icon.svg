@@ -1,23 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512">
-  <!-- Google TV Velvet Dark Studio Background -->
-  <rect width="108" height="108" fill="#0F131C" rx="24"/>
-  <circle cx="54" cy="54" r="46" fill="#181D2A"/>
-  <circle cx="54" cy="54" r="32" fill="#283248"/>
+  <!-- Clean Velvet Dark Background -->
+  <rect width="108" height="108" rx="24" fill="#0F131C" />
+  <circle cx="54" cy="54" r="46" fill="none" stroke="#1E293B" stroke-width="1.5" />
 
-  <!-- TV Stand Base -->
-  <rect x="50" y="72" width="8" height="6" fill="#283248"/>
-  <rect x="42" y="78" width="24" height="3" rx="1.5" fill="#283248"/>
+  <!-- Incoming Cast Waves (Periwinkle #8AB4F8) -->
+  <path d="M41 24 A15 15 0 0 1 67 24" fill="none" stroke="#8AB4F8" stroke-width="3" stroke-linecap="round" />
+  <path d="M34 18 A23 23 0 0 1 74 18" fill="none" stroke="#8AB4F8" stroke-width="2.5" stroke-linecap="round" opacity="0.6" />
 
-  <!-- TV Cinema Bezel -->
-  <rect x="24" y="30" width="60" height="44" rx="6" fill="#8AB4F8"/>
+  <!-- TV Chassis (Periwinkle #8AB4F8) -->
+  <rect x="25" y="31" width="58" height="40" rx="7" fill="#8AB4F8" />
 
-  <!-- Cinema Display Inner Screen -->
-  <rect x="27" y="33" width="54" height="28" fill="#0F131C"/>
+  <!-- Inset Cinema Screen (Dark #0F131C) -->
+  <rect x="28" y="34" width="52" height="34" rx="4" fill="#0F131C" />
 
-  <!-- Play Symbol -->
-  <polygon points="50,40 62,47 50,54" fill="#A8C7FA"/>
+  <!-- Hero Play Beacon (Pure White #FFFFFF) -->
+  <path d="M49 43.8 C48.3 43.4 47.5 43.8 47.5 44.6 L47.5 53.4 C47.5 54.2 48.3 54.6 49 54.2 L57 49.8 C57.7 49.4 57.7 48.6 57 48.2 Z" fill="#FFFFFF" />
 
-  <!-- Inward Reception Arc Signals -->
-  <path stroke="#8AB4F8" stroke-width="3" stroke-linecap="round" fill="none" d="M40,24 a16,16 0 0,1 28,0"/>
-  <path stroke="#A8C7FA" stroke-width="3.2" stroke-linecap="round" fill="none" d="M34,18 a24,24 0 0,1 40,0"/>
+  <!-- Cinema Stream Status Bar -->
+  <line x1="36" y1="62" x2="52" y2="62" stroke="#8AB4F8" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="54" y1="62" x2="72" y2="62" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round" />
+
+  <!-- Minimalist Pedestal Stand (Periwinkle #8AB4F8) -->
+  <rect x="51.5" y="71" width="5" height="5" fill="#8AB4F8" />
+  <rect x="39" y="76" width="30" height="2.6" rx="1.3" fill="#8AB4F8" />
 </svg>

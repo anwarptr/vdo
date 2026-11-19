@@ -1,27 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" width="640" height="360">
-  <!-- Google TV Velvet Dark Studio Background -->
-  <rect width="320" height="180" fill="#0F131C"/>
-  <polygon points="0,0 320,180 0,180" fill="#181D2A"/>
+  <!-- Clean Velvet Dark Background -->
+  <rect width="320" height="180" rx="14" fill="#0F131C" />
+  <rect width="318" height="178" x="1" y="1" rx="13" fill="none" stroke="#1E293B" stroke-width="1.5" />
 
-  <!-- Left TV Display Graphic -->
-  <rect x="66" y="128" width="16" height="10" fill="#283248"/>
-  <rect x="54" y="138" width="40" height="4" rx="2" fill="#283248"/>
-  <rect x="26" y="54" width="96" height="74" rx="7" fill="#8AB4F8"/>
-  <rect x="31" y="59" width="86" height="52" rx="2" fill="#0F131C"/>
-  <polygon points="66,72 88,85 66,98" fill="#A8C7FA"/>
+  <!-- LEFT: TV Display Artwork (Periwinkle #8AB4F8 + White #FFFFFF) -->
+  <!-- Top Incoming Waves -->
+  <path d="M62 44 A20 20 0 0 1 98 44" fill="none" stroke="#8AB4F8" stroke-width="3.5" stroke-linecap="round" />
+  <path d="M52 35 A30 30 0 0 1 108 35" fill="none" stroke="#8AB4F8" stroke-width="2.8" stroke-linecap="round" opacity="0.6" />
 
-  <!-- Receiving Broadcast Signal Rays -->
-  <path stroke="#8AB4F8" stroke-width="4" stroke-linecap="round" fill="none" d="M56,42 a24,24 0 0,1 36,0"/>
-  <path stroke="#A8C7FA" stroke-width="4" stroke-linecap="round" fill="none" d="M46,32 a36,36 0 0,1 56,0"/>
+  <!-- TV Chassis -->
+  <rect x="34" y="54" width="92" height="64" rx="9" fill="#8AB4F8" />
 
-  <!-- Bold Typography: "V" -->
-  <polygon points="150,62 163,116 176,62 188,62 L170,126 L156,126 L138,62" fill="#8AB4F8"/>
-  <!-- Bold Typography: "D" -->
-  <path fill="#FFFFFF" d="M198,62 H220 C234,62 244,72 244,86 L244,102 C244,116 234,126 220,126 H198 Z M210,74 V114 H219 C227,114 231,109 231,101 V87 C231,79 227,74 219,74 Z"/>
-  <!-- Bold Typography: "O" -->
-  <path fill="#A8C7FA" d="M272,62 C258,62 249,72 249,86 V102 C249,116 258,126 272,126 C286,126 295,116 295,102 V86 C295,72 286,62 272,62 Z M272,74 C279,74 282,79 282,87 V101 C282,109 279,114 272,114 C265,114 262,109 262,101 V87 C262,79 265,74 272,74 Z"/>
+  <!-- Inset OLED Cinema Screen -->
+  <rect x="38" y="58" width="84" height="56" rx="6" fill="#0F131C" />
 
-  <!-- Subtitle Accent Bar -->
-  <rect x="150" y="140" width="145" height="3" rx="1.5" fill="#8AB4F8"/>
-  <text x="150" y="152" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="9" font-weight="700" letter-spacing="3">TV • CINEMA RECEIVER</text>
+  <!-- Play Beacon -->
+  <path d="M74 76.5 C73.1 76 72 76.6 72 77.7 L72 92.3 C72 93.4 73.1 94 74 93.5 L88 86.2 C88.9 85.7 88.9 84.3 88 83.8 Z" fill="#FFFFFF" />
+
+  <!-- Stream Status Bar -->
+  <line x1="50" y1="104" x2="78" y2="104" stroke="#8AB4F8" stroke-width="2.2" stroke-linecap="round" />
+  <line x1="82" y1="104" x2="110" y2="104" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" />
+
+  <!-- TV Stand -->
+  <rect x="76" y="118" width="8" height="8" fill="#8AB4F8" />
+  <rect x="56" y="126" width="48" height="4" rx="2" fill="#8AB4F8" />
+
+  <!-- RIGHT: Typography & Branding (Simple #8AB4F8 & #FFFFFF) -->
+  <!-- 'V' -->
+  <polygon points="148,60 162,106 174,106 188,60 176,60 168,90 160,60" fill="#8AB4F8" />
+
+  <!-- 'D' -->
+  <path d="M196 60 H215 C224.5 60 231 67.5 231 77 V89 C231 98.5 224.5 106 215 106 H196 Z M207 71 V95 H214 C218 95 220 92.5 220 88 V78 C220 73.5 218 71 214 71 Z" fill="#FFFFFF" />
+
+  <!-- 'O' -->
+  <path d="M255 60 C244.5 60 238 68 238 78 V88 C238 98 244.5 106 255 106 C265.5 106 272 98 272 88 V78 C272 68 265.5 60 255 60 Z M255 71 C259.5 71 261.5 74 261.5 79 V87 C261.5 92 259.5 95 255 95 C250.5 95 248.5 92 248.5 87 V79 C248.5 74 250.5 71 255 71 Z" fill="#8AB4F8" />
+
+  <!-- 'TV' Pill Badge -->
+  <rect x="279" y="66" width="31" height="21" rx="5" fill="#0F131C" stroke="#8AB4F8" stroke-width="1.5" />
+  <text x="294.5" y="81" fill="#8AB4F8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="800" letter-spacing="1" text-anchor="middle">TV</text>
+
+  <!-- Accent Divider Line -->
+  <rect x="148" y="117" width="162" height="2.5" rx="1.25" fill="#8AB4F8" />
+
+  <!-- Subtitle -->
+  <text x="148" y="133" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="8.5" font-weight="700" letter-spacing="3.2">WIRELESS CINEMA RECEIVER</text>
+  <circle cx="152" cy="147" r="2.5" fill="#8AB4F8" />
+  <text x="159" y="150" fill="#64748B" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="7" font-weight="600" letter-spacing="1.2">READY TO CAST • 4K ULTRA HD</text>
 </svg>

@@ -113,9 +113,6 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
     <path
         android:fillColor="#181D2A"
         android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
-    <path
-        android:fillColor="#283248"
-        android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
 </vector>
 EOF
 
@@ -125,53 +122,62 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Outer Signal Waves -->
+    <!-- Radiating Cast Signal Waves -->
     <path
         android:strokeColor="#8AB4F8"
         android:strokeWidth="3"
         android:strokeLineCap="round"
-        android:pathData="M81,38 a26,26 0 0,1 0,32" />
-    <path
-        android:strokeColor="#A8C7FA"
-        android:strokeWidth="3.2"
-        android:strokeLineCap="round"
-        android:pathData="M75,44 a18,18 0 0,1 0,20" />
+        android:pathData="M34,33 A20,20 0 0,0 34,51" />
     <path
         android:strokeColor="#8AB4F8"
-        android:strokeWidth="3"
+        android:strokeWidth="2.5"
+        android:strokeAlpha="0.6"
         android:strokeLineCap="round"
-        android:pathData="M27,38 a26,26 0 0,0 0,32" />
-    <path
-        android:strokeColor="#A8C7FA"
-        android:strokeWidth="3.2"
-        android:strokeLineCap="round"
-        android:pathData="M33,44 a18,18 0 0,0 0,20" />
+        android:pathData="M26,27 A28,28 0 0,0 26,57" />
 
-    <!-- Sleek Remote Contour Body -->
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M74,33 A20,20 0 0,1 74,51" />
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="2.5"
+        android:strokeAlpha="0.6"
+        android:strokeLineCap="round"
+        android:pathData="M82,27 A28,28 0 0,1 82,57" />
+
+    <!-- Modern Remote Chassis -->
     <path
         android:fillColor="#8AB4F8"
-        android:pathData="M43,26 h22 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 h-22 c-3.3,0 -6,-2.7 -6,-6 v-44 c0,-3.3 2.7,-6 6,-6 z" />
+        android:pathData="M48,25 h12 c5.5,0 10,4.5 10,10 v38 c0,5.5 -4.5,10 -10,10 h-12 c-5.5,0 -10,-4.5 -10,-10 v-38 c0,-5.5 4.5,-10 10,-10 z" />
 
-    <!-- Inset Display Screen -->
+    <!-- Inset Screen Display -->
     <path
         android:fillColor="#0F131C"
-        android:pathData="M41,33 h26 v28 h-26 z" />
+        android:pathData="M48,29 h12 c3.3,0 6,2.7 6,6 v12 c0,3.3 -2.7,6 -6,6 h-12 c-3.3,0 -6,-2.7 -6,-6 v-12 c0,-3.3 2.7,-6 6,-6 z" />
 
-    <!-- Sharp Play Emblem -->
+    <!-- Radiant Play Beacon Inside Screen -->
     <path
-        android:fillColor="#A8C7FA"
-        android:pathData="M50,42 l12,5 -12,5 z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M50.5,35.8 c-0.7,-0.4 -1.5,0 -1.5,0.8 v8.8 c0,0.8 0.8,1.2 1.5,0.8 l7.5,-4.4 c0.7,-0.4 0.7,-1.2 0,-1.6 z" />
 
-    <!-- Remote Navigation Circle -->
+    <!-- Modern Tactile Navigation D-Pad Wheel -->
     <path
         android:fillColor="#0F131C"
-        android:pathData="M54,69 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
+        android:pathData="M54,67 m-8,0 a8,8 0,1,0 16,0 a8,8 0,1,0 -16,0" />
+
+    <!-- Center OK Action Dot -->
     <path
-        android:fillColor="#0F131C"
-        android:pathData="M45,69 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,67 m-2.8,0 a2.8,2.8 0,1,0 5.6,0 a2.8,2.8 0,1,0 -5.6,0" />
+
+    <!-- D-Pad Directional Ticks -->
     <path
-        android:fillColor="#0F131C"
-        android:pathData="M63,69 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M54,60.5 v1.5 M54,72 v1.5 M47.5,67 h1.5 M59,67 h1.5" />
 </vector>
 EOF
 
@@ -186,26 +192,64 @@ cat << 'EOF' > app/src/main/res/drawable/ic_launcher.xml
         android:pathData="M0,0h108v108h-108z" />
     <path
         android:fillColor="#181D2A"
-        android:pathData="M54,54m-44,0a44,44 0,1 1,88 0a44,44 0,1 1,-88 0" />
-    <path
-        android:fillColor="#8AB4F8"
-        android:pathData="M43,26 h22 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 h-22 c-3.3,0 -6,-2.7 -6,-6 v-44 c0,-3.3 2.7,-6 6,-6 z" />
-    <path
-        android:fillColor="#0F131C"
-        android:pathData="M41,33 h26 v28 h-26 z" />
-    <path
-        android:fillColor="#A8C7FA"
-        android:pathData="M50,42 l12,5 -12,5 z" />
+        android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
+
+    <!-- Radiating Cast Signal Waves -->
     <path
         android:strokeColor="#8AB4F8"
-        android:strokeWidth="3.2"
+        android:strokeWidth="3"
         android:strokeLineCap="round"
-        android:pathData="M76,43 a18,18 0 0,1 0,22" />
+        android:pathData="M34,33 A20,20 0 0,0 34,51" />
     <path
-        android:strokeColor="#A8C7FA"
-        android:strokeWidth="3.2"
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="2.5"
+        android:strokeAlpha="0.6"
         android:strokeLineCap="round"
-        android:pathData="M83,37 a26,26 0 0,1 0,34" />
+        android:pathData="M26,27 A28,28 0 0,0 26,57" />
+
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M74,33 A20,20 0 0,1 74,51" />
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="2.5"
+        android:strokeAlpha="0.6"
+        android:strokeLineCap="round"
+        android:pathData="M82,27 A28,28 0 0,1 82,57" />
+
+    <!-- Modern Remote Chassis -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M48,25 h12 c5.5,0 10,4.5 10,10 v38 c0,5.5 -4.5,10 -10,10 h-12 c-5.5,0 -10,-4.5 -10,-10 v-38 c0,-5.5 4.5,-10 10,-10 z" />
+
+    <!-- Inset Screen Display -->
+    <path
+        android:fillColor="#0F131C"
+        android:pathData="M48,29 h12 c3.3,0 6,2.7 6,6 v12 c0,3.3 -2.7,6 -6,6 h-12 c-3.3,0 -6,-2.7 -6,-6 v-12 c0,-3.3 2.7,-6 6,-6 z" />
+
+    <!-- Radiant Play Beacon Inside Screen -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50.5,35.8 c-0.7,-0.4 -1.5,0 -1.5,0.8 v8.8 c0,0.8 0.8,1.2 1.5,0.8 l7.5,-4.4 c0.7,-0.4 0.7,-1.2 0,-1.6 z" />
+
+    <!-- Modern Tactile Navigation D-Pad Wheel -->
+    <path
+        android:fillColor="#0F131C"
+        android:pathData="M54,67 m-8,0 a8,8 0,1,0 16,0 a8,8 0,1,0 -16,0" />
+
+    <!-- Center OK Action Dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,67 m-2.8,0 a2.8,2.8 0,1,0 5.6,0 a2.8,2.8 0,1,0 -5.6,0" />
+
+    <!-- D-Pad Directional Ticks -->
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M54,60.5 v1.5 M54,72 v1.5 M47.5,67 h1.5 M59,67 h1.5" />
 </vector>
 EOF
 
@@ -3441,9 +3485,6 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_background.xml
     <path
         android:fillColor="#181D2A"
         android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
-    <path
-        android:fillColor="#283248"
-        android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
 </vector>
 EOF
 
@@ -3453,37 +3494,53 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher_foreground.xml
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Stand -->
-    <path
-        android:fillColor="#283248"
-        android:pathData="M50,72 h8 v6 h-8 z M42,78 h24 v3 h-24 z" />
-
-    <!-- Ultra-slim TV Bezel -->
-    <path
-        android:fillColor="#8AB4F8"
-        android:pathData="M24,30 h60 c3.3,0 6,2.7 6,6 v32 c0,3.3 -2.7,6 -6,6 h-60 c-3.3,0 -6,-2.7 -6,-6 v-32 c0,-3.3 2.7,-6 6,-6 z" />
-
-    <!-- Cinema Display Inner Screen -->
-    <path
-        android:fillColor="#0F131C"
-        android:pathData="M27,33 h54 v28 h-54 z" />
-
-    <!-- Luminous Play Mark -->
-    <path
-        android:fillColor="#A8C7FA"
-        android:pathData="M50,40 l12,7 -12,7 z" />
-
-    <!-- Inward Reception Arc Signals -->
+    <!-- Incoming Cast Waves -->
     <path
         android:strokeColor="#8AB4F8"
         android:strokeWidth="3"
         android:strokeLineCap="round"
-        android:pathData="M40,24 a16,16 0 0,1 28,0" />
+        android:pathData="M41,24 A15,15 0 0,1 67,24" />
     <path
-        android:strokeColor="#A8C7FA"
-        android:strokeWidth="3.2"
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="2.5"
+        android:strokeAlpha="0.6"
         android:strokeLineCap="round"
-        android:pathData="M34,18 a24,24 0 0,1 40,0" />
+        android:pathData="M34,18 A23,23 0 0,1 74,18" />
+
+    <!-- Ultra-Slim Smart TV Bezel -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M32,31 h44 c3.9,0 7,3.1 7,7 v26 c0,3.9 -3.1,7 -7,7 h-44 c-3.9,0 -7,-3.1 -7,-7 v-26 c0,-3.9 3.1,-7 7,-7 z" />
+
+    <!-- Inset Cinema Screen -->
+    <path
+        android:fillColor="#0F131C"
+        android:pathData="M32,34 h44 c2.2,0 4,1.8 4,4 v26 c0,2.2 -1.8,4 -4,4 h-44 c-2.2,0 -4,-1.8 -4,-4 v-26 c0,-2.2 1.8,-4 4,-4 z" />
+
+    <!-- Hero Play Beacon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M49,43.8 c-0.7,-0.4 -1.5,0 -1.5,0.8 v8.8 c0,0.8 0.8,1.2 1.5,0.8 l8,-4.4 c0.7,-0.4 0.7,-1.2 0,-1.6 z" />
+
+    <!-- Cinema Stream Status Bar -->
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M36,62 h16" />
+    <path
+        android:strokeColor="#1E293B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M54,62 h18" />
+
+    <!-- Minimalist TV Stand -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M51.5,71 h5 v5 h-5 z" />
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M40.3,76 h27.4 c0.7,0 1.3,0.6 1.3,1.3 c0,0.7 -0.6,1.3 -1.3,1.3 h-27.4 c-0.7,0 -1.3,-0.6 -1.3,-1.3 c0,-0.7 0.6,-1.3 1.3,-1.3 z" />
 </vector>
 EOF
 
@@ -3497,17 +3554,56 @@ cat << 'EOF' > tv/src/main/res/drawable/ic_launcher.xml
         android:fillColor="#0F131C"
         android:pathData="M0,0h108v108h-108z" />
     <path
-        android:fillColor="#283248"
-        android:pathData="M50,72 h8 v6 h-8 z M42,78 h24 v3 h-24 z" />
+        android:fillColor="#181D2A"
+        android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
+
+    <!-- Incoming Cast Waves -->
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M41,24 A15,15 0 0,1 67,24" />
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="2.5"
+        android:strokeAlpha="0.6"
+        android:strokeLineCap="round"
+        android:pathData="M34,18 A23,23 0 0,1 74,18" />
+
+    <!-- Ultra-Slim Smart TV Bezel -->
     <path
         android:fillColor="#8AB4F8"
-        android:pathData="M24,30 h60 c3.3,0 6,2.7 6,6 v32 c0,3.3 -2.7,6 -6,6 h-60 c-3.3,0 -6,-2.7 -6,-6 v-32 c0,-3.3 2.7,-6 6,-6 z" />
+        android:pathData="M32,31 h44 c3.9,0 7,3.1 7,7 v26 c0,3.9 -3.1,7 -7,7 h-44 c-3.9,0 -7,-3.1 -7,-7 v-26 c0,-3.9 3.1,-7 7,-7 z" />
+
+    <!-- Inset Cinema Screen -->
     <path
         android:fillColor="#0F131C"
-        android:pathData="M27,33 h54 v28 h-54 z" />
+        android:pathData="M32,34 h44 c2.2,0 4,1.8 4,4 v26 c0,2.2 -1.8,4 -4,4 h-44 c-2.2,0 -4,-1.8 -4,-4 v-26 c0,-2.2 1.8,-4 4,-4 z" />
+
+    <!-- Hero Play Beacon -->
     <path
-        android:fillColor="#A8C7FA"
-        android:pathData="M50,40 l12,7 -12,7 z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M49,43.8 c-0.7,-0.4 -1.5,0 -1.5,0.8 v8.8 c0,0.8 0.8,1.2 1.5,0.8 l8,-4.4 c0.7,-0.4 0.7,-1.2 0,-1.6 z" />
+
+    <!-- Cinema Stream Status Bar -->
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M36,62 h16" />
+    <path
+        android:strokeColor="#1E293B"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M54,62 h18" />
+
+    <!-- Minimalist TV Stand -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M51.5,71 h5 v5 h-5 z" />
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M40.3,76 h27.4 c0.7,0 1.3,0.6 1.3,1.3 c0,0.7 -0.6,1.3 -1.3,1.3 h-27.4 c-0.7,0 -1.3,-0.6 -1.3,-1.3 c0,-0.7 0.6,-1.3 1.3,-1.3 z" />
 </vector>
 EOF
 
@@ -3518,58 +3614,104 @@ cat << 'EOF' > tv/src/main/res/drawable/tv_banner.xml
     android:height="180dp"
     android:viewportWidth="320"
     android:viewportHeight="180">
-    <!-- Studio Dark Gradient Background -->
+    <!-- Clean Dark Base -->
     <path
         android:fillColor="#0F131C"
         android:pathData="M0,0h320v180h-320z" />
     <path
-        android:fillColor="#181D2A"
-        android:pathData="M0,0 L320,180 L0,180 Z" />
+        android:strokeColor="#1E293B"
+        android:strokeWidth="1.5"
+        android:pathData="M1,1 h318 v178 h-318 z" />
 
-    <!-- Left Cinema Display Graphic -->
-    <path
-        android:fillColor="#283248"
-        android:pathData="M66,128 h16 v10 h-16 z M54,138 h40 v4 h-40 z" />
-    <path
-        android:fillColor="#8AB4F8"
-        android:pathData="M26,54 h96 c4,0 7,3 7,7 v60 c0,4 -3,7 -7,7 h-96 c-4,0 -7,-3 -7,-7 v-60 c0,-4 3,-7 7,-7 z" />
-    <path
-        android:fillColor="#0F131C"
-        android:pathData="M31,59 h86 v52 h-86 z" />
-    <path
-        android:fillColor="#A8C7FA"
-        android:pathData="M66,72 l22,13 -22,13 z" />
-
-    <!-- Receiving Broadcast Signal Rays -->
+    <!-- LEFT: TV Display Artwork -->
+    <!-- Incoming Cast Waves -->
     <path
         android:strokeColor="#8AB4F8"
-        android:strokeWidth="4"
+        android:strokeWidth="3.5"
         android:strokeLineCap="round"
-        android:pathData="M56,42 a24,24 0 0,1 36,0" />
+        android:pathData="M62,44 A20,20 0 0,1 98,44" />
     <path
-        android:strokeColor="#A8C7FA"
-        android:strokeWidth="4"
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="2.8"
+        android:strokeAlpha="0.6"
         android:strokeLineCap="round"
-        android:pathData="M46,32 a36,36 0 0,1 56,0" />
+        android:pathData="M52,35 A30,30 0 0,1 108,35" />
 
-    <!-- "V D O" Typography -->
+    <!-- TV Chassis -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M43,54 h74 c5,0 9,4 9,9 v46 c0,5 -4,9 -9,9 h-74 c-5,0 -9,-4 -9,-9 v-46 c0,-5 4,-9 9,-9 z" />
+
+    <!-- OLED Cinema Screen -->
+    <path
+        android:fillColor="#0F131C"
+        android:pathData="M44,58 h72 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 h-72 c-3.3,0 -6,-2.7 -6,-6 v-44 c0,-3.3 2.7,-6 6,-6 z" />
+
+    <!-- Radiant Hero Play Beacon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M74,76.5 c-0.9,-0.5 -2,0.1 -2,1.2 v14.6 c0,1.1 1.1,1.7 2,1.2 l14,-7.3 c0.9,-0.5 0.9,-1.9 0,-2.4 z" />
+
+    <!-- Cinema Stream Status Bar -->
+    <path
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M50,104 h28" />
+    <path
+        android:strokeColor="#1E293B"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M82,104 h28" />
+
+    <!-- TV Stand -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M76,118 h8 v8 h-8 z" />
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M58,126 h44 c1.1,0 2,0.9 2,2 c0,1.1 -0.9,2 -2,2 h-44 c-1.1,0 -2,-0.9 -2,-2 c0,-1.1 0.9,-2 2,-2 z" />
+
+    <!-- RIGHT: Typography & Branding -->
     <!-- 'V' -->
     <path
         android:fillColor="#8AB4F8"
-        android:pathData="M150,62 L163,116 L176,62 L188,62 L170,126 L156,126 L138,62 Z" />
+        android:pathData="M148,60 L162,106 L174,106 L188,60 L176,60 L168,90 L160,60 Z" />
+
     <!-- 'D' -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M198,62 H220 C234,62 244,72 244,86 L244,102 C244,116 234,126 220,126 H198 Z M210,74 V114 H219 C227,114 231,109 231,101 V87 C231,79 227,74 219,74 Z" />
+        android:pathData="M196,60 H215 C224.5,60 231,67.5 231,77 V89 C231,98.5 224.5,106 215,106 H196 Z M207,71 V95 H214 C218,95 220,92.5 220,88 V78 C220,73.5 218,71 214,71 Z" />
+
     <!-- 'O' -->
     <path
-        android:fillColor="#A8C7FA"
-        android:pathData="M272,62 C258,62 249,72 249,86 V102 C249,116 258,126 272,126 C286,126 295,116 295,102 V86 C295,72 286,62 272,62 Z M272,74 C279,74 282,79 282,87 V101 C282,109 279,114 272,114 C265,114 262,109 262,101 V87 C262,79 265,74 272,74 Z" />
+        android:fillColor="#8AB4F8"
+        android:pathData="M255,60 C244.5,60 238,68 238,78 V88 C238,98 244.5,106 255,106 C265.5,106 272,98 272,88 V78 C272,68 265.5,60 255,60 Z M255,71 C259.5,71 261.5,74 261.5,79 V87 C261.5,92 259.5,95 255,95 C250.5,95 248.5,92 248.5,87 V79 C248.5,74 250.5,71 255,71 Z" />
 
-    <!-- Subtitle: "TV • CINEMA RECEIVER" Accent Bar -->
+    <!-- 'TV' Pill Badge -->
+    <path
+        android:fillColor="#0F131C"
+        android:strokeColor="#8AB4F8"
+        android:strokeWidth="1.5"
+        android:pathData="M284,66 h21 c2.8,0 5,2.2 5,5 v11 c0,2.8 -2.2,5 -5,5 h-21 c-2.8,0 -5,-2.2 -5,-5 v-11 c0,-2.8 2.2,-5 5,-5 z" />
+
+    <!-- 'TV' Letters -->
     <path
         android:fillColor="#8AB4F8"
-        android:pathData="M150,140 h145 v3 h-145 z" />
+        android:pathData="M287,71.5 h7 v2 h-2.4 v7.5 h-2.2 v-7.5 h-2.4 z" />
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M296,71.5 h2.2 l1.9,6.5 l1.9,-6.5 h2.2 l-3.1,9.5 h-2 z" />
+
+    <!-- Accent Divider Bar -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M148,117 h162 v2.5 h-162 z" />
+
+    <!-- Status Indicator Dot -->
+    <path
+        android:fillColor="#8AB4F8"
+        android:pathData="M152,147 m-2.5,0 a2.5,2.5 0,1,0 5,0 a2.5,2.5 0,1,0 -5,0" />
 </vector>
 EOF
 
