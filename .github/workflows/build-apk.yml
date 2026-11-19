@@ -67,6 +67,7 @@ jobs:
           API_URL="${DROIDSTORE_URL%/}/api/apks/upload"
           RESP_FILE=$(mktemp)
           HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
             -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
             -F "apk=@tv/build/outputs/apk/release/vdo-tv-release.apk" \
             -F "appName=VDO TV" \
@@ -91,6 +92,7 @@ jobs:
           API_URL="${DROIDSTORE_URL%/}/api/apks/upload"
           RESP_FILE=$(mktemp)
           HTTP_CODE=$(curl -s -o "$RESP_FILE" -w "%{http_code}" -X POST "$API_URL" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
             -H "Authorization: Bearer $DROIDSTORE_API_KEY" \
             -F "apk=@app/build/outputs/apk/release/vdo-remote-release.apk" \
             -F "appName=VDO Remote" \
