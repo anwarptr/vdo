@@ -4589,12 +4589,7 @@ if [ ! -f release.keystore ]; then
     keytool -genkeypair -v -keystore release.keystore -alias vdocast -keyalg RSA -keysize 2048 -validity 10000 -storepass vdocast -keypass vdocast -dname "CN=VDOCast, O=VDOCast, C=US"
 fi
 
-if [ ! -f gradlew ]; then
-    mkdir -p .gw-boot
-    (cd .gw-boot && gradle wrapper --gradle-version 8.7)
-    cp -r .gw-boot/* .
-    rm -rf .gw-boot
-fi
+gradle wrapper --gradle-version 8.7
 chmod +x gradlew
 ./gradlew :app:assembleRelease :tv:assembleRelease
 
